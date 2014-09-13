@@ -12,6 +12,18 @@ Just run `cide` inside of your project. cide will look for a .cide.yml file
 for configuration but all arguments are also passable trough command-line
 arguments. If a Dockerfile already exists it will be used instead.
 
+Example
+-------
+
+`.cide.yml`
+```
+---
+image: "ruby:2.1"
+as_root:
+- apt-get update -qy && apt-get install libxml2-dev
+command: bundle && bundle exec rspec
+```
+
 Features
 --------
 
