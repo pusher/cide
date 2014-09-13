@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 #
-# TODO: OptionParser of array for "as_root" commands
+# cide - Continuous Integration Docker Environment
+#
 
 require "erb"
 require "optparse"
@@ -24,7 +25,7 @@ module Fmt; extend self
       obj.index(/['"\s\{\}\[\]\=]/) ? obj.inspect : obj
     end
   rescue
-    $!.to_s
+    dump($!.to_s)
   end
 
   def dump_obj(obj)
@@ -54,14 +55,14 @@ def struct(opts={})
   end.new(*opts.values)
 end
 
+# Replaces invalid docker tag characters by underscores
 def id(str)
   "#{str}".downcase.gsub(/[^a-z0-9\-_.]/, '_')
 end
 
 def sh(*args)
   log cmd: args
-  system(*args.map(&:to_s))
-  if $?.exitstatus > 0
+  unless system(*args.map(&:to_s))
     fail "command failed"
   end
 end
@@ -72,7 +73,7 @@ end
 
 config = struct(
   image: "ubuntu",
-  build_tag: id(Dir.pwd),
+  tag: id(File.basename(Dir.pwd)),
   as_root: [],
   command: 'script/ci',
 )
@@ -86,9 +87,7 @@ end
 
 OptionParser.new do |opts|
   opts.on('-i', '--image IMAGE', "Select the source image (#{config.image})", &config.set(:image))
-  opts.on('-t', '--tag TAG', "Name of the build (default: root basename)") do |str|
-    config.build_tag = id(str)
-  end
+  opts.on('-t', '--tag TAG', "Name of the build (#{config.tag})", &config.set(:tag))
   opts.on('-c', '--command CMD', "CI script to run (#{config.command})", &config.set(:command))
   opts.on_tail('-h', '--help', 'Shows this help') do
     puts opts
@@ -96,7 +95,7 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-config.build_tag = "cide-#{config.build_tag}"
+config.tag = id("cide-#{config.tag}")
 
 log config: config.to_h
 
@@ -120,28 +119,28 @@ if `uname`.strip == "Darwin" && !ENV['DOCKER_HOST']
   ENV['DOCKER_HOST'] = `boot2docker socket 2>/dev/null`.strip
 end
 
-docker :build, '-t', config.build_tag, '.'
-docker :run, '--rm', '-t', config.build_tag, *config.command
+docker :build, '-t', config.tag, '.'
+docker :run, '--rm', '-t', config.tag, "sh", "-c", config.command
 
 __END__
 FROM <%= image %>
-RUN useradd -m -U -d /home/app app
-VOLUME /cache
+RUN useradd -m -U -d /cide cide
 
 # Install system build dependencies here
 
 <% as_root.each do |cmd| %>
-RUN <%= cmd.inspect %>
+RUN <%= cmd %>
 <% end %>
 
-# Add app data
+# Add project data
 
-ADD . /app/
-RUN ["chown", "-R", "app:app", "/app"]
+ADD . /cide/src
+RUN chown -R cide:cide /cide
 
-# Switch to app user
+# Switch to cide user
 
-USER app
-WORKDIR /app
-ENV HOME /home/app
-ENV GEM_HOME /home/app/.gem
+USER cide
+
+WORKDIR /cide/src
+ENV HOME /cide
+ENV GEM_HOME /cide/.gem

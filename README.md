@@ -20,7 +20,7 @@ Example
 ---
 image: "ruby:2.1"
 as_root:
-- apt-get update -qy && apt-get install libxml2-dev
+- apt-get update -qy && apt-get install -qy libxml2-dev
 command: bundle && bundle exec rspec
 ```
 
@@ -29,6 +29,7 @@ Features
 
 * straighforward to use, just run `cide` inside of your project
 * works on OSX with boot2docker
+* integrates easily with jenkins or other CI systems
 
 Limitations
 -----------
@@ -39,9 +40,11 @@ doesn't allow referencing files outside of the directory (even with a symlink)
 TODO
 ----
 
+* schema validation
 * use the /cache volume
 * multi-container runs
 * `cide setup` to configure inside of a project
 * `cide gc` to cleanup old cide builds
 * travis.yml compatiblity with docker containers that map to languages
-
+* add ways of exporting artifacts
+* ENV GEM_HOME is container specific
