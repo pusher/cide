@@ -13,7 +13,7 @@ DESC
   s.homepage      = 'https://github.com/zimbatm/cide'
   s.license       = 'MIT'
 
-  spec.executables << 'cide'
+  s.executables  << 'cide'
   s.files         = `git ls-files`.split($/)
   s.test_files    = `git ls-files spec`.split($/)
   s.require_paths = ['lib']
