@@ -8,7 +8,7 @@ require "yaml"
 
 module Fmt; extend self
   def fmt(obj)
-    dump_obj_(obj)
+    dump_obj(obj)
   end
 
   protected
@@ -16,40 +16,26 @@ module Fmt; extend self
   def dump(obj)
     case obj
     when Array
-      dump_arr(obj)
+      "[" + obj.map{|v| dump v}.join(' ') + "]"
     when Hash
-      dump_obj(obj)
+      "{" + dump_obj(obj) + "}"
     else
-      dump_str(obj)
+      obj = obj.to_s
+      obj.index(/['"\s\{\}\[\]\=]/) ? obj.inspect : obj
     end
+  rescue
+    $!.to_s
   end
 
   def dump_obj(obj)
-    "{#{dump_obj_ obj}}"
-  end
-
-  def dump_obj_(obj)
     obj.map do |(k, v)|
       "#{k}=#{dump v}"
     end.join(' ')
   end
-
-  def dump_arr(obj)
-    "[" + obj.map do |v|
-      "#{dump v}"
-    end.join(' ') + "]"
-  end
-
-  def dump_str(obj)
-    obj = obj.to_s
-    obj.index(/['"\s\{\}\[\]\=]/) ? obj.inspect : obj
-  rescue
-    $!.to_s
-  end
 end
 
 def log(opts={})
-  $stdout.puts Fmt.fmt(opts)
+  $stdout.puts "cide: #{Fmt.fmt opts}"
 end
 
 def struct(opts={})
@@ -62,7 +48,7 @@ def struct(opts={})
       ERB.new(DATA.read).result(binding)
     end
 
-    def merge(opts={})
+    def merge!(opts={})
       opts.each_pair{|k,v| self[k] = v }
     end
   end.new(*opts.values)
@@ -84,12 +70,9 @@ def docker(*args)
   sh "docker", *args
 end
 
-default_tag = File.basename(Dir.pwd)
-
 config = struct(
   image: "ubuntu",
-  build_tag: default_tag,
-  build_root: Dir.pwd,
+  build_tag: id(Dir.pwd),
   as_root: [],
   command: 'script/ci',
 )
@@ -98,19 +81,13 @@ CIDEFILE = '.cide.yml'
 if !File.exists?(CIDEFILE)
   log reason: "not found", file: CIDEFILE
 else
-  config.merge YAML.load_file(CIDEFILE)
+  config.merge! YAML.load_file(CIDEFILE)
 end
 
 OptionParser.new do |opts|
   opts.on('-i', '--image IMAGE', "Select the source image (#{config.image})", &config.set(:image))
   opts.on('-t', '--tag TAG', "Name of the build (default: root basename)") do |str|
     config.build_tag = id(str)
-  end
-  opts.on('-r', '--root DIR', "Build root (#{config.build_root})") do |str|
-    config.build_root = File.expand_path(str)
-    if config.build_tag == default_tag
-      config.build_tag = id(File.basename(build_root))
-    end
   end
   opts.on('-c', '--command CMD', "CI script to run (#{config.command})", &config.set(:command))
   opts.on_tail('-h', '--help', 'Shows this help') do
@@ -119,12 +96,9 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-config.build_tag ||= File.basename(config.build_root)
 config.build_tag = "cide-#{config.build_tag}"
 
 log config: config.to_h
-
-Dir.chdir(config.build_root)
 
 if !File.exist?('Dockerfile')
   log msg: "Creating temporary Dockerfile"
