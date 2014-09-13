@@ -1,0 +1,173 @@
+#!/usr/bin/env ruby
+#
+# TODO: OptionParser of array for "as_root" commands
+
+require "erb"
+require "optparse"
+require "yaml"
+
+module Fmt; extend self
+  def fmt(obj)
+    dump_obj_(obj)
+  end
+
+  protected
+
+  def dump(obj)
+    case obj
+    when Array
+      dump_arr(obj)
+    when Hash
+      dump_obj(obj)
+    else
+      dump_str(obj)
+    end
+  end
+
+  def dump_obj(obj)
+    "{#{dump_obj_ obj}}"
+  end
+
+  def dump_obj_(obj)
+    obj.map do |(k, v)|
+      "#{k}=#{dump v}"
+    end.join(' ')
+  end
+
+  def dump_arr(obj)
+    "[" + obj.map do |v|
+      "#{dump v}"
+    end.join(' ') + "]"
+  end
+
+  def dump_str(obj)
+    obj = obj.to_s
+    obj.index(/['"\s\{\}\[\]\=]/) ? obj.inspect : obj
+  rescue
+    $!.to_s
+  end
+end
+
+def log(opts={})
+  $stdout.puts Fmt.fmt(opts)
+end
+
+def struct(opts={})
+  Class.new(Struct.new(*opts.keys)) do
+    def set(name)
+      method("#{name}=")
+    end
+
+    def to_dockerfile
+      ERB.new(DATA.read).result(binding)
+    end
+
+    def merge(opts={})
+      opts.each_pair{|k,v| self[k] = v }
+    end
+  end.new(*opts.values)
+end
+
+def id(str)
+  "#{str}".downcase.gsub(/[^a-z0-9\-_.]/, '_')
+end
+
+def sh(*args)
+  log cmd: args
+  system(*args.map(&:to_s))
+  if $?.exitstatus > 0
+    fail "command failed"
+  end
+end
+
+def docker(*args)
+  sh "docker", *args
+end
+
+default_tag = File.basename(Dir.pwd)
+
+config = struct(
+  image: "ubuntu",
+  build_tag: default_tag,
+  build_root: Dir.pwd,
+  as_root: [],
+  command: 'script/ci',
+)
+
+CIDEFILE = '.cide.yml'
+if !File.exists?(CIDEFILE)
+  log reason: "not found", file: CIDEFILE
+else
+  config.merge YAML.load_file(CIDEFILE)
+end
+
+OptionParser.new do |opts|
+  opts.on('-i', '--image IMAGE', "Select the source image (#{config.image})", &config.set(:image))
+  opts.on('-t', '--tag TAG', "Name of the build (default: root basename)") do |str|
+    config.build_tag = id(str)
+  end
+  opts.on('-r', '--root DIR', "Build root (#{config.build_root})") do |str|
+    config.build_root = File.expand_path(str)
+    if config.build_tag == default_tag
+      config.build_tag = id(File.basename(build_root))
+    end
+  end
+  opts.on('-c', '--command CMD', "CI script to run (#{config.command})", &config.set(:command))
+  opts.on_tail('-h', '--help', 'Shows this help') do
+    puts opts
+    exit
+  end
+end.parse!
+
+config.build_tag ||= File.basename(config.build_root)
+config.build_tag = "cide-#{config.build_tag}"
+
+log config: config.to_h
+
+Dir.chdir(config.build_root)
+
+if !File.exist?('Dockerfile')
+  log msg: "Creating temporary Dockerfile"
+  File.write('Dockerfile', config.to_dockerfile)
+  at_exit do
+    File.unlink('Dockerfile')
+  end
+else
+  log msg: "Using existing Dockerfile"
+end
+
+if `uname`.strip == "Darwin" && !ENV['DOCKER_HOST']
+  if !system("which boot2docker >/dev/null 2>&1")
+    puts "make sure boot2docker is installed and running"
+    puts
+    puts "> brew install boot2docker"
+    exit 1
+  end
+  ENV['DOCKER_HOST'] = `boot2docker socket 2>/dev/null`.strip
+end
+
+docker :build, '-t', config.build_tag, '.'
+docker :run, '--rm', '-t', config.build_tag, *config.command
+
+__END__
+FROM <%= image %>
+RUN useradd -m -U -d /home/app app
+VOLUME /cache
+
+# Install system build dependencies here
+
+<% as_root.each do |cmd| %>
+RUN <%= cmd.inspect %>
+<% end %>
+
+# Add app data
+
+ADD . /app/
+RUN ["chown", "-R", "app:app", "/app"]
+
+# Switch to app user
+
+USER app
+WORKDIR /app
+ENV HOME /home/app
+ENV GEM_HOME /home/app/.gem
