@@ -1,9 +1,11 @@
 cide - Continuous Integration Docker Environment
 ================================================
 
-`cide` is a command-line application that runs your project's CI inside of a
-docker container. This allows to test locally in the same environment as
-remotely.
+`cide` makes it easy to reproduce CI builds on the developer computer by
+providing the same docker environment.
+
+Run `cide` in the project root to run a build. Configure by providing a
+`.cide.yml` file.
 
 Usage
 -----

@@ -6,8 +6,10 @@ Gem::Specification.new do |s|
   s.authors       = ['zimbatm']
   s.email         = ['zimbatm@zimbatm.com']
   s.summary       = 'CI docker runner'
-  s.description   = 'cide makes it easy to reproduce CI builds on the
-developer computer'  
+  s.description   = <<DESC
+cide makes it easy to reproduce CI builds on the developer computer by
+providing the same docker environment.
+DESC
   s.homepage      = 'https://github.com/zimbatm/cide'
   s.license       = 'MIT'
 
