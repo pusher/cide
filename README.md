@@ -42,6 +42,7 @@ doesn't allow referencing files outside of the directory (even with a symlink)
 TODO
 ----
 
+* linked container
 * schema validation
 * use the /cache volume
 * multi-container runs
