@@ -39,6 +39,23 @@ Limitations
 A temporary Dockerfile has to be created in the project's root because docker
 doesn't allow referencing files outside of the directory (even with a symlink)
 
+Installation
+------------
+
+Install docker: https://docs.docker.com/installation/#installation
+
+```
+gem install cide
+```
+
+OSX docker install:
+```
+brew install boot2docker
+boot2docker init
+boot2docker up
+# cide auto-detects boot2docker on OSX
+```
+
 TODO
 ----
 
