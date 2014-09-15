@@ -143,4 +143,3 @@ USER cide
 
 WORKDIR /cide/src
 ENV HOME /cide
-ENV GEM_HOME /cide/.gem

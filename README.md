@@ -67,4 +67,3 @@ TODO
 * `cide gc` to cleanup old cide builds
 * travis.yml compatiblity with docker containers that map to languages
 * add ways of exporting artifacts
-* ENV GEM_HOME is container specific
