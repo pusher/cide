@@ -7,122 +7,8 @@ require "erb"
 require "optparse"
 require "yaml"
 
-module Fmt; extend self
-  def fmt(obj)
-    dump_obj(obj)
-  end
-
-  protected
-
-  def dump(obj)
-    case obj
-    when Array
-      "[" + obj.map{|v| dump v}.join(' ') + "]"
-    when Hash
-      "{" + dump_obj(obj) + "}"
-    else
-      obj = obj.to_s
-      obj.index(/['"\s\{\}\[\]\=]/) ? obj.inspect : obj
-    end
-  rescue
-    dump($!.to_s)
-  end
-
-  def dump_obj(obj)
-    obj.map do |(k, v)|
-      "#{k}=#{dump v}"
-    end.join(' ')
-  end
-end
-
-def log(opts={})
-  $stdout.puts "cide: #{Fmt.fmt opts}"
-end
-
-def struct(opts={})
-  Class.new(Struct.new(*opts.keys)) do
-    def set(name)
-      method("#{name}=")
-    end
-
-    def to_dockerfile
-      ERB.new(DATA.read).result(binding)
-    end
-
-    def merge!(opts={})
-      opts.each_pair{|k,v| self[k] = v }
-    end
-  end.new(*opts.values)
-end
-
-# Replaces invalid docker tag characters by underscores
-def id(str)
-  "#{str}".downcase.gsub(/[^a-z0-9\-_.]/, '_')
-end
-
-def sh(*args)
-  log cmd: args
-  unless system(*args.map(&:to_s))
-    fail "command failed"
-  end
-end
-
-def docker(*args)
-  sh "docker", *args
-end
-
-config = struct(
-  image: "ubuntu",
-  tag: id(File.basename(Dir.pwd)),
-  as_root: [],
-  command: 'script/ci',
-)
-
-CIDEFILE = '.cide.yml'
-if !File.exists?(CIDEFILE)
-  log reason: "not found", file: CIDEFILE
-else
-  config.merge! YAML.load_file(CIDEFILE)
-end
-
-OptionParser.new do |opts|
-  opts.on('-i', '--image IMAGE', "Select the source image (#{config.image})", &config.set(:image))
-  opts.on('-t', '--tag TAG', "Name of the build (#{config.tag})", &config.set(:tag))
-  opts.on('-c', '--command CMD', "CI script to run (#{config.command})", &config.set(:command))
-  opts.on_tail('-h', '--help', 'Shows this help') do
-    puts opts
-    exit
-  end
-end.parse!
-
-config.tag = id("cide-#{config.tag}")
-
-log config: config.to_h
-
-if !File.exist?('Dockerfile')
-  log msg: "Creating temporary Dockerfile"
-  File.write('Dockerfile', config.to_dockerfile)
-  at_exit do
-    File.unlink('Dockerfile')
-  end
-else
-  log msg: "Using existing Dockerfile"
-end
-
-if `uname`.strip == "Darwin" && !ENV['DOCKER_HOST']
-  if !system("which boot2docker >/dev/null 2>&1")
-    puts "make sure boot2docker is installed and running"
-    puts
-    puts "> brew install boot2docker"
-    exit 1
-  end
-  ENV['DOCKER_HOST'] = `boot2docker socket 2>/dev/null`.strip
-end
-
-docker :build, '-t', config.tag, '.'
-docker :run, '--rm', '-t', config.tag, "sh", "-c", config.command
-
-__END__
+DOCKERFILE = 'Dockerfile'
+DOCKERFILE_TEMPLATE = <<EOF
 FROM <%= image %>
 RUN useradd -m -U -d /cide cide
 
@@ -143,3 +29,114 @@ USER cide
 
 WORKDIR /cide/src
 ENV HOME /cide
+EOF
+
+module Fmt; extend self
+  def fmt(obj)
+    dump_obj obj
+  end
+
+  protected
+
+  def dump(obj)
+    case obj
+    when Array
+      "[" + obj.map{|v| dump v}.join(' ') + "]"
+    when Hash
+      "{" + dump_obj(obj) + "}"
+    else
+      obj = obj.to_s
+      obj.index(/['"\s\{\}\[\]\=]/) ? obj.inspect : obj
+    end
+  rescue
+    dump $!.to_s
+  end
+
+  def dump_obj(obj)
+    obj.map do |(k, v)|
+      "#{k}=#{dump v}"
+    end.join ' '
+  end
+end
+
+def log(opts={})
+  $stdout.puts "cide: #{Fmt.fmt opts}"
+end
+
+def sh(*args)
+  log cmd: args
+  unless system(*args.map(&:to_s))
+    fail "command failed"
+  end
+end
+
+def docker(*args)
+  sh "docker", *args
+end
+
+def struct(opts={}, &block)
+  Class.new(Struct.new(*opts.keys), &block).new(*opts.values)
+end
+
+config = struct(
+  image: "ubuntu",
+  tag: File.basename(Dir.pwd),
+  as_root: [],
+  command: 'script/ci',
+) do
+  def set(name)
+    method "#{name}="
+  end
+
+  def tag=(str)
+    # Replaces invalid docker tag characters by underscores
+    super "#{str}".downcase.gsub(/[^a-z0-9\-_.]/, '_')
+  end
+
+  def to_dockerfile
+    ERB.new(DOCKERFILE_TEMPLATE).result(binding)
+  end
+
+  def merge!(opts={})
+    opts.each_pair{|k,v| self[k] = v }
+  end
+end
+
+config.merge! YAML.load_file('.cide.yml')
+
+OptionParser.new do |opts|
+  opts.on('-i', '--image IMAGE', "Select the source image (#{config.image})", &config.set(:image))
+  opts.on('-t', '--tag TAG', "Name of the build (#{config.tag})", &config.set(:tag))
+  opts.on('-c', '--command CMD', "CI script to run (#{config.command})", &config.set(:command))
+  opts.on_tail('-h', '--help', 'Shows this help') do
+    puts opts
+    exit
+  end
+end.parse!
+
+log config: config.to_h
+
+if !File.exist?(DOCKERFILE)
+  log msg: "Creating temporary Dockerfile"
+  File.write(DOCKERFILE, config.to_dockerfile)
+  at_exit do
+    File.unlink(DOCKERFILE)
+  end
+else
+  log msg: "Using existing Dockerfile"
+end
+
+if `uname`.strip == "Darwin" && !ENV['DOCKER_HOST']
+  if !system("which boot2docker >/dev/null 2>&1")
+    puts "make sure boot2docker is installed and running"
+    puts
+    puts "> brew install boot2docker"
+    exit 1
+  end
+  ENV['DOCKER_HOST'] = `boot2docker socket 2>/dev/null`.strip
+end
+
+tag = "cide-#{config.tag}"
+
+docker :build, '-t', tag, '.'
+docker :run, '--rm', '-t', tag, "sh", "-c", config.command
