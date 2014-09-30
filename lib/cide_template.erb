@@ -1,0 +1,20 @@
+FROM <%= image %>
+RUN useradd -m -U -d /cide cide
+
+# Install system build dependencies here
+
+<% as_root.each do |cmd| %>
+RUN <%= cmd %>
+<% end %>
+
+# Add project data
+
+ADD . /cide/src
+RUN chown -R cide:cide /cide
+
+# Switch to cide user
+
+USER cide
+
+WORKDIR /cide/src
+ENV HOME /cide
