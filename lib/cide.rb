@@ -31,16 +31,12 @@ module CIDE
 
     alias_method :image=, :from=
 
-    def set(name)
-      method "#{name}="
-    end
-
     def to_dockerfile
       ERB.new(TEMPLATE).result(binding)
     end
 
     def merge!(opts={})
-      opts.each_pair(&method(:set))
+      opts.each_pair{|k, v| public_send("#{k}=", v) }
       self
     end
 
