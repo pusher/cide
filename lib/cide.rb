@@ -23,10 +23,13 @@ module CIDE
   end
 
   DefaultConfig = struct(
-    image: "ubuntu",
+    from: "ubuntu",
     as_root: [],
     command: 'script/ci',
   ) do
+
+    alias_method :image=, :from=
+
     def set(name)
       method "#{name}="
     end
@@ -36,7 +39,7 @@ module CIDE
     end
 
     def merge!(opts={})
-      opts.each_pair{|k,v| self[k] = v }
+      opts.each_pair(&method(:set))
       self
     end
 
