@@ -57,6 +57,8 @@ module CIDE
       aliases: ['n', 't'],
       default: CIDE.docker_id(File.basename(Dir.pwd))
     def build
+      setup_docker
+
       config = DefaultConfig.merge YAML.load_file('.cide.yml')
       tag = "cide/#{docker_id(options[:name])}"
 
@@ -72,21 +74,78 @@ module CIDE
         say_status :Dockerfile, "Using existing Dockerfile"
       end
 
-      if `uname`.strip == "Darwin" && !ENV['DOCKER_HOST']
-        if !run("which boot2docker >/dev/null 2>&1")
-          puts "make sure boot2docker is installed and running"
-          puts
-          puts "> brew install boot2docker"
-          exit 1
-        end
-        ENV['DOCKER_HOST'] = run("boot2docker socket 2>/dev/null", capture: true).strip
-      end
-
       docker :build, '-t', tag, '.'
       docker :run, '--rm', '-t', tag, "sh", "-c", config.command
     end
 
+
+    desc "clean", "Removes old containers"
+    method_option "days",
+      desc: "Number of days to keep the images",
+      default: 7,
+      type: :numeric
+    method_option "count",
+      desc: "Maximum number of images to keep",
+      default: 10,
+      type: :numeric
+    def clean
+      setup_docker
+
+      days_to_keep = options[:days]
+      max_images = options[:count]
+
+      x = run('docker images --no-trunc', capture: true)
+      iter = x.lines.each
+      iter.next
+      cide_image_ids = iter
+        .map{ |line| line.split(/\s+/) }
+        .select { |line| line[0] =~ %r{^cide/} || line[0] == "<none>" }
+        .map{ |line| line[2] }
+
+      if cide_image_ids.empty?
+        puts "No images found to be cleaned"
+        return
+      end
+
+      x = run("docker inspect #{cide_image_ids.join(' ')}", capture: true)
+      cide_images = JSON.parse(x.strip)
+        .each {|image| image["Created"] = Time.iso8601(image["Created"]) }
+        .sort {|a, b| a["Created"] <=> b["Created"] }
+
+      if cide_images.size > max_images
+        old_cide_images = cide_images[0..-max_images]
+          .map{ |image| image["Id"] }
+      else
+        old_times = Time.now - (days_to_keep * 24 * 60 * 60)
+        old_cide_images = cide_images
+          .select{ |image| image["Created"] < old_times}
+          .map{ |image| image["Id"] }
+      end
+
+      if old_cide_images.empty?
+        puts "No images found to be cleaned"
+        return
+      end
+
+      run("docker rmi #{old_cide_images.join(' ')}")
+    end
+
     protected
+
+    def setup_docker
+      @setup_docker ||= (
+        if `uname`.strip == "Darwin" && !ENV['DOCKER_HOST']
+          if !system("which boot2docker >/dev/null 2>&1")
+            puts "make sure boot2docker is installed and running"
+            puts
+            puts "> brew install boot2docker"
+            exit 1
+          end
+          ENV['DOCKER_HOST'] = `boot2docker socket 2>/dev/null`.strip
+        end
+        true
+      )
+    end
 
     def docker(*args)
       #sh "docker", *args
