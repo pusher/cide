@@ -12,6 +12,7 @@ module CIDE
 
   DOCKERFILE = 'Dockerfile'
   TEMPLATE = File.read(File.expand_path('../cide_template.erb', __FILE__))
+  CONFIG_FILE = ".cide.yml"
 
   def docker_id(str)
     # Replaces invalid docker tag characters by underscores
@@ -46,6 +47,12 @@ module CIDE
     def merge(opts={})
       dup.merge!(opts)
     end
+
+    def to_yaml
+      members.each_with_object({}) do |k, obj|
+        obj[k.to_s] = self[k]
+      end.to_yaml
+    end
   end
 
   class CLI < Thor
@@ -62,7 +69,7 @@ module CIDE
     def build
       setup_docker
 
-      config = DefaultConfig.merge YAML.load_file('.cide.yml')
+      config = DefaultConfig.merge YAML.load_file(CONFIG_FILE)
       tag = "cide/#{docker_id(options[:name])}"
 
       say_status :config, config.to_h
@@ -131,6 +138,16 @@ module CIDE
       end
 
       run("docker rmi #{old_cide_images.join(' ')}")
+    end
+
+    desc "init", "Creates a blank #{CONFIG_FILE} into the project"
+    def init
+      if File.exists?(CONFIG_FILE)
+        puts "#{CONFIG_FILE} already exists"
+        return
+      end
+      puts "Creating #{CONFIG_FILE} with default values"
+      create_file CONFIG_FILE, DefaultConfig.to_yaml
     end
 
     protected
