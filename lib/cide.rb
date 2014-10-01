@@ -112,7 +112,7 @@ module CIDE
       docker :build, '-t', tag, '.'
 
       cli_args = []
-      cli_args.concat([:run, '--rm'])
+      cli_args.push :run, '--rm'
 
       if config[:export]
         unless config[:host_export_dir]
@@ -123,10 +123,10 @@ module CIDE
           config[:docker_artifact_dir], CIDE_SRC_DIR
         )
 
-        cli_args.concat(['-v', [export_dir, artifact_dir].join(':')])
+        cli_args.push '-v', [export_dir, artifact_dir].join(':')
       end
 
-      cli_args.concat(['-t', tag, 'sh', '-c', options[:command]])
+      cli_args.push '-t', tag, 'sh', '-c', options[:command]
 
       docker(*cli_args)
     end
