@@ -28,8 +28,8 @@ module CIDE
 
   DefaultConfig = struct(
     command: 'script/ci',
-    is_export: false,
-    docker_export_dir: "#{CIDE_HOME_DIR}/artifacts",
+    export: false,
+    docker_artifact_dir: './artifacts',
     host_export_dir: nil,
     from: 'ubuntu',
     as_root: [],
@@ -82,6 +82,12 @@ module CIDE
       aliases: ['c'],
       default: DefaultConfig.command
 
+    method_option "export",
+      desc: "Are we expecting to export artifacts",
+      type: :boolean,
+      default: false
+
+
     def build
       setup_docker
 
@@ -101,7 +107,23 @@ module CIDE
       end
 
       docker :build, '-t', tag, '.'
-      docker :run, '--rm', '-t', tag, "sh", "-c", config.command
+
+      cli_args = []
+      cli_args.concat([:run, '--rm'])
+
+      if config[:export]
+        unless config[:host_export_dir]
+          fail "Fail: export flag set but no export dir given"
+        end
+        export_dir = File.expand_path(config[:host_export_dir], Dir.pwd)
+        artifact_dir = File.expand_path(config[:docker_artifact_dir], CIDE_SRC_DIR)
+
+        cli_args.concat(['-v', [export_dir, artifact_dir].join(':')])
+      end
+
+      cli_args.concat(['-t', tag, "sh", "-c", options[:command]])
+
+      docker(*cli_args)
     end
 
 
