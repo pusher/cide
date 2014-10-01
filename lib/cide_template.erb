@@ -1,5 +1,5 @@
 FROM <%= from %>
-RUN useradd -m -U -d /cide cide
+RUN useradd -m -U -d <%= CIDE_DIR %> cide
 
 # Install system build dependencies here
 
@@ -9,12 +9,12 @@ RUN <%= cmd %>
 
 # Add project data
 
-ADD . /cide/src
-RUN chown -R cide:cide /cide
+ADD . <%= CIDE_SRC_DIR %>
+RUN chown -R cide:cide <%= CIDE_DIR %>
 
 # Switch to cide user
 
 USER cide
 
-WORKDIR /cide/src
-ENV HOME /cide
+WORKDIR <%= CIDE_SRC_DIR %>
+ENV HOME <%= CIDE_DIR %>

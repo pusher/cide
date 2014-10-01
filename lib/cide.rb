@@ -14,6 +14,9 @@ module CIDE
   TEMPLATE = File.read(File.expand_path('../cide_template.erb', __FILE__))
   CONFIG_FILE = ".cide.yml"
 
+  CIDE_DIR = '/cide'
+  CIDE_SRC_DIR = File.join(CIDE_DIR, '/src')
+
   def docker_id(str)
     # Replaces invalid docker tag characters by underscores
     "#{str}".downcase.gsub(/[^a-z0-9\-_.]/, '_')
@@ -24,9 +27,14 @@ module CIDE
   end
 
   DefaultConfig = struct(
-    from: "ubuntu",
-    as_root: [],
     command: 'script/ci',
+    export: false,
+    docker_artifact_dir: './artifacts',
+    host_export_dir: nil,
+    from: 'ubuntu',
+    as_root: [],
+    env_forward: [],
+    name: nil
   ) do
 
     alias_method :image=, :from=
@@ -57,15 +65,33 @@ module CIDE
 
     default_command "build"
 
-    desc "build", "Builds an image and executes the tests"
+    desc "build", "Builds an image and executes the run script"
+
     method_option "name",
       desc: "Name of the build",
       aliases: ['n', 't'],
       default: CIDE.docker_id(File.basename(Dir.pwd))
+
+    method_option "host_export_dir",
+      desc: "Output directory on host that the docker instance can place files in",
+      aliases: ['o'],
+      default: nil
+
+    method_option "command",
+      desc: "The script to run",
+      aliases: ['c'],
+      default: DefaultConfig.command
+
+    method_option "export",
+      desc: "Are we expecting to export artifacts",
+      type: :boolean,
+      default: false
+
+
     def build
       setup_docker
 
-      config = DefaultConfig.merge YAML.load_file(CONFIG_FILE)
+      config = DefaultConfig.merge(YAML.load_file(CONFIG_FILE)).merge(options)
       tag = "cide/#{docker_id(options[:name])}"
 
       say_status :config, config.to_h
@@ -81,7 +107,23 @@ module CIDE
       end
 
       docker :build, '-t', tag, '.'
-      docker :run, '--rm', '-t', tag, "sh", "-c", config.command
+
+      cli_args = []
+      cli_args.concat([:run, '--rm'])
+
+      if config[:export]
+        unless config[:host_export_dir]
+          fail "Fail: export flag set but no export dir given"
+        end
+        export_dir = File.expand_path(config[:host_export_dir], Dir.pwd)
+        artifact_dir = File.expand_path(config[:docker_artifact_dir], CIDE_SRC_DIR)
+
+        cli_args.concat(['-v', [export_dir, artifact_dir].join(':')])
+      end
+
+      cli_args.concat(['-t', tag, "sh", "-c", options[:command]])
+
+      docker(*cli_args)
     end
 
 
