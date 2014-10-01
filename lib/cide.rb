@@ -14,6 +14,8 @@ module CIDE
   TEMPLATE = File.read(File.expand_path('../cide_template.erb', __FILE__))
   CONFIG_FILE = ".cide.yml"
 
+  CIDE_HOME_DIR = '/cide'
+
   def docker_id(str)
     # Replaces invalid docker tag characters by underscores
     "#{str}".downcase.gsub(/[^a-z0-9\-_.]/, '_')
@@ -24,9 +26,14 @@ module CIDE
   end
 
   DefaultConfig = struct(
-    from: "ubuntu",
-    as_root: [],
     command: 'script/ci',
+    is_export: false,
+    docker_export_dir: "#{CIDE_HOME_DIR}/artifacts",
+    host_export_dir: nil,
+    from: 'ubuntu',
+    as_root: [],
+    env_forward: [],
+    name: nil
   ) do
 
     alias_method :image=, :from=
@@ -57,15 +64,27 @@ module CIDE
 
     default_command "build"
 
-    desc "build", "Builds an image and executes the tests"
+    desc "build", "Builds an image and executes the run script"
+
     method_option "name",
       desc: "Name of the build",
       aliases: ['n', 't'],
       default: CIDE.docker_id(File.basename(Dir.pwd))
+
+    method_option "host_export_dir",
+      desc: "Output directory on host that the docker instance can place files in",
+      aliases: ['o'],
+      default: nil
+
+    method_option "command",
+      desc: "The script to run",
+      aliases: ['c'],
+      default: DefaultConfig.command
+
     def build
       setup_docker
 
-      config = DefaultConfig.merge YAML.load_file(CONFIG_FILE)
+      config = DefaultConfig.merge(YAML.load_file(CONFIG_FILE)).merge(options)
       tag = "cide/#{docker_id(options[:name])}"
 
       say_status :config, config.to_h
