@@ -14,7 +14,8 @@ module CIDE
   TEMPLATE = File.read(File.expand_path('../cide_template.erb', __FILE__))
   CONFIG_FILE = ".cide.yml"
 
-  CIDE_HOME_DIR = '/cide'
+  CIDE_DIR = '/cide'
+  CIDE_SRC_DIR = File.join(CIDE_DIR, '/src')
 
   def docker_id(str)
     # Replaces invalid docker tag characters by underscores
