@@ -18,6 +18,8 @@ DESC
   s.test_files    = `git ls-files spec`.split($INPUT_RECORD_SEPARATOR)
   s.require_paths = ['lib']
 
+  s.required_ruby_version = '>= 1.9.3'
+
   s.add_runtime_dependency 'thor'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rubocop'
