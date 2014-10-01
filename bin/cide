@@ -3,6 +3,6 @@
 # cide - Continuous Integration Docker Environment
 #
 
-$LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
-require "cide"
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+require 'cide'
 CIDE::CLI.start
