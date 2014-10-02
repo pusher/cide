@@ -4,18 +4,30 @@ RUN useradd -m -U -d <%= CIDE_DIR %> cide
 
 # Install system build dependencies here
 
-<% as_root.each do |cmd| %>
+<% as_root.each do |cmd| -%>
 RUN <%= cmd %>
-<% end %>
+<% end -%>
+
+# Before
+
+<% if before['run'] -%>
+  <% before['add'].to_a.each do |file| -%>
+ADD <%= file %> <%= File.expand_path(file, CIDE_SRC_DIR) %>
+  <% end %>
+RUN chown -R cide:cide <%= CIDE_SRC_DIR %>
+USER cide
+WORKDIR <%= CIDE_SRC_DIR %>
+RUN <%= before['run'] %>
+USER root
+<% end -%>
 
 # Add project data
 
 ADD . <%= CIDE_SRC_DIR %>
-RUN chown -R cide:cide <%= CIDE_DIR %>
+RUN chown -R cide:cide <%= CIDE_SRC_DIR %>
 
 # Switch to cide user
 
 USER cide
-
 WORKDIR <%= CIDE_SRC_DIR %>
 ENV HOME <%= CIDE_DIR %>

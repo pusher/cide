@@ -31,6 +31,7 @@ module CIDE
 
   DefaultConfig = struct(
     command: 'script/ci',
+    before: {},
     export: false,
     docker_artifact_dir: './artifacts',
     host_export_dir: nil,
