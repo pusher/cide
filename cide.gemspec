@@ -14,9 +14,11 @@ DESC
   s.license       = 'MIT'
 
   s.executables  << 'cide'
-  s.files         = `git ls-files`.split($/)
-  s.test_files    = `git ls-files spec`.split($/)
+  s.files         = `git ls-files`.split($INPUT_RECORD_SEPARATOR)
+  s.test_files    = `git ls-files spec`.split($INPUT_RECORD_SEPARATOR)
   s.require_paths = ['lib']
 
   s.add_runtime_dependency 'thor'
+  s.add_development_dependency 'rake'
+  s.add_development_dependency 'rubocop'
 end
