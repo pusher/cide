@@ -1,4 +1,5 @@
 FROM <%= from %>
+USER root
 RUN useradd -m -U -d <%= CIDE_DIR %> cide
 
 # Install system build dependencies here
