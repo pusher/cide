@@ -43,7 +43,7 @@ module CIDE
     alias_method :image=, :from=
 
     def to_dockerfile
-      ERB.new(TEMPLATE).result(binding)
+      ERB.new(TEMPLATE, nil, '<>-').result(binding)
     end
 
     def merge!(opts = {})
