@@ -11,3 +11,8 @@ Metrics/MethodLength:
 # Don't align stuff vertically, bad for diffing
 Style/AlignParameters:
   EnforcedStyle: with_fixed_indentation
+
+# Allows for easy diffing
+# Keep them sorted alphabetically unless a meaningful order exists
+Style/TrailingComma:
+  EnforcedStyleForMultiline: comma

@@ -114,24 +114,24 @@ module CIDE
 
       docker :build, '-t', tag, '.'
 
-      if config.export
-        unless config.export_dir
-          fail 'Fail: export flag set but no export dir given'
-        end
+      return unless config.export
 
-        id=docker(:run, '-d', tag, true, capture: true).strip
-        begin
-          guest_export_dir = File.expand_path(config.export_dir, CIDE_SRC_DIR)
+      unless config.export_dir
+        fail 'Fail: export flag set but no export dir given'
+      end
 
-          host_export_dir = File.expand_path(
-            config.host_export_dir || config.export_dir,
-            Dir.pwd)
+      id = docker(:run, '-d', tag, true, capture: true).strip
+      begin
+        guest_export_dir = File.expand_path(config.export_dir, CIDE_SRC_DIR)
 
-          docker :cp, [id, guest_export_dir].join(':'), host_export_dir
+        host_export_dir = File.expand_path(
+          config.host_export_dir || config.export_dir,
+          Dir.pwd)
 
-        ensure
-          docker :rm, '-f', id
-        end
+        docker :cp, [id, guest_export_dir].join(':'), host_export_dir
+
+      ensure
+        docker :rm, '-f', id
       end
     end
 
@@ -216,7 +216,7 @@ module CIDE
     def docker(*args)
       opts = args.last.is_a?(Hash) ? args.pop : {}
       ret = run Shellwords.join(['docker'] + args), opts
-      fail "Command failed" if $?.exitstatus > 0
+      fail 'Command failed' if $CHILD_STATUS.exitstatus > 0
       ret
     end
   end
