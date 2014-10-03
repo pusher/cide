@@ -83,15 +83,16 @@ module CIDE
       aliases: ['o'],
       default: nil
 
+    method_option 'export',
+      desc: 'Are we expecting to export artifacts',
+      type: :boolean,
+      default: false
+
     method_option 'run',
       desc: 'The script to run',
       aliases: ['r'],
       default: DefaultConfig.run
 
-    method_option 'export',
-      desc: 'Are we expecting to export artifacts',
-      type: :boolean,
-      default: false
 
     def build
       setup_docker
@@ -102,6 +103,7 @@ module CIDE
 
       say_status :config, config.to_h
 
+      # FIXME: Move Dockerfile out of the way if it exists
       if !File.exist?(DOCKERFILE)
         say_status :Dockerfile, 'Creating temporary Dockerfile'
         File.write(DOCKERFILE, config.to_dockerfile)
