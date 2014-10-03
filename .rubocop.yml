@@ -16,3 +16,7 @@ Style/AlignParameters:
 # Keep them sorted alphabetically unless a meaningful order exists
 Style/TrailingComma:
   EnforcedStyleForMultiline: comma
+
+# $? is not equivalent to $CHILD_STATUS
+Style/SpecialGlobalVars:
+  Enabled: false

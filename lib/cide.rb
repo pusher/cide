@@ -93,7 +93,6 @@ module CIDE
       aliases: ['r'],
       default: DefaultConfig.run
 
-
     def build
       setup_docker
 
@@ -218,7 +217,7 @@ module CIDE
     def docker(*args)
       opts = args.last.is_a?(Hash) ? args.pop : {}
       ret = run Shellwords.join(['docker'] + args), opts
-      fail 'Command failed' if $CHILD_STATUS.exitstatus > 0
+      fail 'Command failed' if $?.exitstatus > 0
       ret
     end
   end
