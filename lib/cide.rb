@@ -30,20 +30,22 @@ module CIDE
   end
 
   DefaultConfig = struct(
-    command: 'script/ci',
-    export: false,
-    docker_artifact_dir: './artifacts',
-    host_export_dir: nil,
+    name: nil,
     from: 'ubuntu',
     as_root: [],
-    env_forward: [],
-    name: nil
+    forward_env: [],
+    before: {},
+    export: false,
+    export_dir: './artifacts',
+    host_export_dir: nil,
+    run: 'script/ci',
   ) do
 
     alias_method :image=, :from=
+    alias_method :command=, :run=
 
     def to_dockerfile
-      ERB.new(TEMPLATE).result(binding)
+      ERB.new(TEMPLATE, nil, '<>-').result(binding)
     end
 
     def merge!(opts = {})
@@ -81,10 +83,10 @@ module CIDE
       aliases: ['o'],
       default: nil
 
-    method_option 'command',
+    method_option 'run',
       desc: 'The script to run',
-      aliases: ['c'],
-      default: DefaultConfig.command
+      aliases: ['r'],
+      default: DefaultConfig.run
 
     method_option 'export',
       desc: 'Are we expecting to export artifacts',
@@ -95,6 +97,7 @@ module CIDE
       setup_docker
 
       config = DefaultConfig.merge(YAML.load_file(CONFIG_FILE)).merge(options)
+      config.host_export_dir ||= config.export_dir
       tag = "cide/#{docker_id(options[:name])}"
 
       say_status :config, config.to_h
@@ -111,24 +114,25 @@ module CIDE
 
       docker :build, '-t', tag, '.'
 
-      cli_args = []
-      cli_args.push :run, '--rm'
+      return unless config.export
 
-      if config[:export]
-        unless config[:host_export_dir]
-          fail 'Fail: export flag set but no export dir given'
-        end
-        export_dir = File.expand_path(config[:host_export_dir], Dir.pwd)
-        artifact_dir = File.expand_path(
-          config[:docker_artifact_dir], CIDE_SRC_DIR
-        )
-
-        cli_args.push '-v', [export_dir, artifact_dir].join(':')
+      unless config.export_dir
+        fail 'Fail: export flag set but no export dir given'
       end
 
-      cli_args.push '-t', tag, 'sh', '-c', options[:command]
+      id = docker(:run, '-d', tag, true, capture: true).strip
+      begin
+        guest_export_dir = File.expand_path(config.export_dir, CIDE_SRC_DIR)
 
-      docker(*cli_args)
+        host_export_dir = File.expand_path(
+          config.host_export_dir || config.export_dir,
+          Dir.pwd)
+
+        docker :cp, [id, guest_export_dir].join(':'), host_export_dir
+
+      ensure
+        docker :rm, '-f', id
+      end
     end
 
     desc 'clean', 'Removes old containers'
@@ -210,7 +214,10 @@ module CIDE
     end
 
     def docker(*args)
-      run Shellwords.join(['docker'] + args)
+      opts = args.last.is_a?(Hash) ? args.pop : {}
+      ret = run Shellwords.join(['docker'] + args), opts
+      fail 'Command failed' if $CHILD_STATUS.exitstatus > 0
+      ret
     end
   end
 end
