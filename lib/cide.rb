@@ -38,10 +38,11 @@ module CIDE
     export: false,
     export_dir: './artifacts',
     host_export_dir: nil,
-    command: 'script/ci',
+    run: 'script/ci',
   ) do
 
     alias_method :image=, :from=
+    alias_method :command=, :run=
 
     def to_dockerfile
       ERB.new(TEMPLATE, nil, '<>-').result(binding)
@@ -82,10 +83,10 @@ module CIDE
       aliases: ['o'],
       default: nil
 
-    method_option 'command',
+    method_option 'run',
       desc: 'The script to run',
-      aliases: ['c'],
-      default: DefaultConfig.command
+      aliases: ['r'],
+      default: DefaultConfig.run
 
     method_option 'export',
       desc: 'Are we expecting to export artifacts',
