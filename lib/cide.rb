@@ -30,15 +30,15 @@ module CIDE
   end
 
   DefaultConfig = struct(
-    command: 'script/ci',
-    before: {},
-    export: false,
-    docker_artifact_dir: './artifacts',
-    host_export_dir: nil,
+    name: nil,
     from: 'ubuntu',
     as_root: [],
     env_forward: [],
-    name: nil
+    before: {},
+    export: false,
+    export_dir: './artifacts',
+    host_export_dir: nil,
+    command: 'script/ci',
   ) do
 
     alias_method :image=, :from=
@@ -96,6 +96,7 @@ module CIDE
       setup_docker
 
       config = DefaultConfig.merge(YAML.load_file(CONFIG_FILE)).merge(options)
+      config.host_export_dir ||= config.export_dir
       tag = "cide/#{docker_id(options[:name])}"
 
       say_status :config, config.to_h
@@ -112,24 +113,25 @@ module CIDE
 
       docker :build, '-t', tag, '.'
 
-      cli_args = []
-      cli_args.push :run, '--rm'
-
-      if config[:export]
-        unless config[:host_export_dir]
+      if config.export
+        unless config.export_dir
           fail 'Fail: export flag set but no export dir given'
         end
-        export_dir = File.expand_path(config[:host_export_dir], Dir.pwd)
-        artifact_dir = File.expand_path(
-          config[:docker_artifact_dir], CIDE_SRC_DIR
-        )
 
-        cli_args.push '-v', [export_dir, artifact_dir].join(':')
+        id=docker(:run, '-d', tag, true, capture: true).strip
+        begin
+          guest_export_dir = File.expand_path(config.export_dir, CIDE_SRC_DIR)
+
+          host_export_dir = File.expand_path(
+            config.host_export_dir || config.export_dir,
+            Dir.pwd)
+
+          docker :cp, [id, guest_export_dir].join(':'), host_export_dir
+
+        ensure
+          docker :rm, '-f', id
+        end
       end
-
-      cli_args.push '-t', tag, 'sh', '-c', options[:command]
-
-      docker(*cli_args)
     end
 
     desc 'clean', 'Removes old containers'
@@ -211,7 +213,10 @@ module CIDE
     end
 
     def docker(*args)
-      run Shellwords.join(['docker'] + args)
+      opts = args.last.is_a?(Hash) ? args.pop : {}
+      ret = run Shellwords.join(['docker'] + args), opts
+      fail "Command failed" if $?.exitstatus > 0
+      ret
     end
   end
 end

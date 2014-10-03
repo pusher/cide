@@ -15,10 +15,7 @@ RUN <%= cmd %>
 ADD <%= file %> <%= File.expand_path(file, CIDE_SRC_DIR) %>
   <% end %>
 RUN chown -R cide:cide <%= CIDE_SRC_DIR %>
-USER cide
-WORKDIR <%= CIDE_SRC_DIR %>
-RUN <%= before['run'] %>
-USER root
+RUN su -l cide -c "cd <%= CIDE_SRC_DIR %> && <%= Shellwords.escape(before['run'].to_s) %>"
 <% end -%>
 
 # Add project data
@@ -26,8 +23,6 @@ USER root
 ADD . <%= CIDE_SRC_DIR %>
 RUN chown -R cide:cide <%= CIDE_SRC_DIR %>
 
-# Switch to cide user
+# Test !
 
-USER cide
-WORKDIR <%= CIDE_SRC_DIR %>
-ENV HOME <%= CIDE_DIR %>
+RUN su -l cide -c "cd <%= CIDE_SRC_DIR %> && <%= Shellwords.escape(command.to_s) %>"
