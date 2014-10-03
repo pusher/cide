@@ -8,21 +8,38 @@ RUN useradd -m -U -d <%= CIDE_DIR %> cide
 RUN <%= cmd %>
 <% end -%>
 
+# Common
+
+ENV HOME <%= CIDE_DIR %>
+WORKDIR <%= CIDE_SRC_DIR %>
+
 # Before
 
 <% if before['run'] -%>
+  <% before['forward_env'].to_a.each do |key| -%>
+ENV <%= key %> <%= ENV[key] %>
+  <% end %>
   <% before['add'].to_a.each do |file| -%>
 ADD <%= file %> <%= File.expand_path(file, CIDE_SRC_DIR) %>
   <% end %>
-RUN chown -R cide:cide <%= CIDE_SRC_DIR %>
-RUN su -l cide -c "cd <%= CIDE_SRC_DIR %> && <%= Shellwords.escape(before['run'].to_s) %>"
+RUN chown -R cide:cide <%= CIDE_DIR %>
+USER cide
+RUN <%= before['run'] %>
+USER root
 <% end -%>
 
 # Add project data
 
 ADD . <%= CIDE_SRC_DIR %>
-RUN chown -R cide:cide <%= CIDE_SRC_DIR %>
+RUN chown -R cide:cide <%= CIDE_DIR %>
+
+# ENV
+
+<% forward_env.to_a.each do |key| -%>
+ENV <%= key %> <%= ENV[key] %>
+<% end %>
 
 # Test !
 
-RUN su -l cide -c "cd <%= CIDE_SRC_DIR %> && <%= Shellwords.escape(command.to_s) %>"
+USER cide
+RUN <%= command %>

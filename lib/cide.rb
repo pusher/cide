@@ -33,7 +33,7 @@ module CIDE
     name: nil,
     from: 'ubuntu',
     as_root: [],
-    env_forward: [],
+    forward_env: [],
     before: {},
     export: false,
     export_dir: './artifacts',
