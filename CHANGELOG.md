@@ -1,4 +1,9 @@
 
+0.0.6 / 2014-10-08
+==================
+
+  * Fixes parameter precedence issue in the builds
+
 0.0.5 / 2014-10-03
 ==================
 
