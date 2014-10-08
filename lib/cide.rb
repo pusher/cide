@@ -44,6 +44,10 @@ module CIDE
     alias_method :image=, :from=
     alias_method :command=, :run=
 
+    def name=(str)
+      super CIDE.docker_id(str)
+    end
+
     def to_dockerfile
       ERB.new(TEMPLATE, nil, '<>-').result(binding)
     end
@@ -59,7 +63,8 @@ module CIDE
 
     def to_yaml
       members.each_with_object({}) do |k, obj|
-        obj[k.to_s] = self[k]
+        v = self[k]
+        obj[k.to_s] = v unless v.nil?
       end.to_yaml
     end
   end
@@ -76,7 +81,7 @@ module CIDE
     method_option 'name',
       desc: 'Name of the build',
       aliases: %w(n t),
-      default: CIDE.docker_id(File.basename(Dir.pwd))
+      default: nil
 
     method_option 'host_export_dir',
       desc: 'Output directory on host to put build artefacts in',
@@ -86,19 +91,24 @@ module CIDE
     method_option 'export',
       desc: 'Are we expecting to export artifacts',
       type: :boolean,
-      default: false
+      default: nil
 
     method_option 'run',
       desc: 'The script to run',
       aliases: ['r'],
-      default: DefaultConfig.run
+      default: nil
 
     def build
       setup_docker
 
-      config = DefaultConfig.merge(YAML.load_file(CONFIG_FILE)).merge(options)
+      config = DefaultConfig.merge YAML.load_file(CONFIG_FILE)
+      options.each_pair do |k, v|
+        config[k] = v unless v.nil?
+      end
+      config.name ||= File.basename(Dir.pwd)
       config.host_export_dir ||= config.export_dir
-      tag = "cide/#{docker_id(options[:name])}"
+
+      tag = "cide/#{config.name}"
 
       say_status :config, config.to_h
 
