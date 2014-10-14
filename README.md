@@ -61,4 +61,6 @@ TODO
 
 * linked container
 * schema validation
-* use the /cache volume
+* find a way to import SSH keys
+* cleaner output. on error is just outputs a backtrace
+
