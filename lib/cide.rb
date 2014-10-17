@@ -218,7 +218,10 @@ module CIDE
             puts '> brew install boot2docker'
             exit 1
           end
-          ENV['DOCKER_HOST'] = `boot2docker socket 2>/dev/null`.strip
+
+          `boot2docker shellinit 2>/dev/null`
+            .lines
+            .grep(/export (\w+)=(.*)/) { ENV[$1] = $2.strip }
         end
         true
       )
