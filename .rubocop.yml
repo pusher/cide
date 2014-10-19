@@ -20,3 +20,7 @@ Style/TrailingComma:
 # $? is not equivalent to $CHILD_STATUS
 Style/SpecialGlobalVars:
   Enabled: false
+
+# Prefering the short style
+Style/PerlBackrefs:
+  Enabled: false
