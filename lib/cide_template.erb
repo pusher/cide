@@ -26,9 +26,9 @@ ADD <%= file %> <%= File.expand_path(file, CIDE_SRC_DIR) %>
 ADD <%= before['sshconfig'] %> <%= File.expand_path('config', CIDE_SSH_DIR) %>
 RUN chmod 400 <%= File.expand_path('config', CIDE_SSH_DIR) %>
   <% end %>
-  <% before['sshkeys'].to_a.each do |key| -%>
-ADD <%= key %> <%= File.expand_path(key, CIDE_SSH_DIR) %>
-RUN chmod 400 <%= File.expand_path(key, CIDE_SSH_DIR) %>
+  <% if before['sshkey'] -%>
+ADD <%= before['sshkey'] %> <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
+RUN chmod 400 <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
   <% end %>
 RUN chmod 755 <%= CIDE_SSH_DIR %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
