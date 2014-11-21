@@ -17,6 +17,7 @@ module CIDE
 
   CIDE_DIR = '/cide'
   CIDE_SRC_DIR = File.join(CIDE_DIR, '/src')
+  CIDE_SSH_DIR = File.join(CIDE_DIR, '/.ssh')
 
   module_function
 
