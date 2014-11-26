@@ -13,6 +13,17 @@ RUN <%= cmd %>
 ENV HOME <%= CIDE_DIR %>
 WORKDIR <%= CIDE_SRC_DIR %>
 
+# SSH config
+<% if sshkey -%>
+ADD sshconfig <%= File.expand_path('config', CIDE_SSH_DIR) %>
+RUN chmod 400 <%= File.expand_path('config', CIDE_SSH_DIR) %>
+
+ADD <%= sshkey %> <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
+RUN chmod 400 <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
+RUN chmod 755 <%= CIDE_SSH_DIR %>
+RUN chown -R cide:cide <%= CIDE_DIR %>
+<% end %>
+
 # Before
 
 <% if before['run'] -%>
@@ -22,14 +33,6 @@ ENV <%= key %> <%= ENV[key] %>
   <% before['add'].to_a.each do |file| -%>
 ADD <%= file %> <%= File.expand_path(file, CIDE_SRC_DIR) %>
   <% end %>
-ADD sshconfig <%= File.expand_path('config', CIDE_SSH_DIR) %>
-RUN chmod 400 <%= File.expand_path('config', CIDE_SSH_DIR) %>
-  <% if before['sshkey'] -%>
-ADD <%= before['sshkey'] %> <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
-RUN chmod 400 <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
-  <% end %>
-RUN chmod 755 <%= CIDE_SSH_DIR %>
-RUN chown -R cide:cide <%= CIDE_DIR %>
 USER cide
 RUN <%= before['run'] %>
 USER root

@@ -42,6 +42,7 @@ module CIDE
     export_dir: './artifacts',
     host_export_dir: nil,
     run: 'script/ci',
+    sshkey: nil,
   ) do
 
     alias_method :image=, :from=
@@ -99,6 +100,11 @@ module CIDE
     method_option 'run',
       desc: 'The script to run',
       aliases: ['r'],
+      default: nil
+
+    method_option 'sshkey',
+      desc: 'The sshkey to put into the docker image',
+      aliases: ['s'],
       default: nil
 
     def build
