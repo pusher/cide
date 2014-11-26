@@ -22,10 +22,8 @@ ENV <%= key %> <%= ENV[key] %>
   <% before['add'].to_a.each do |file| -%>
 ADD <%= file %> <%= File.expand_path(file, CIDE_SRC_DIR) %>
   <% end %>
-  <% if before['sshconfig'] -%>
-ADD <%= before['sshconfig'] %> <%= File.expand_path('config', CIDE_SSH_DIR) %>
+ADD sshconfig <%= File.expand_path('config', CIDE_SSH_DIR) %>
 RUN chmod 400 <%= File.expand_path('config', CIDE_SSH_DIR) %>
-  <% end %>
   <% if before['sshkey'] -%>
 ADD <%= before['sshkey'] %> <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
 RUN chmod 400 <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>

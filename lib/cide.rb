@@ -12,7 +12,9 @@ require 'thor'
 # The juicy bits are defined in CIDE::CLI
 module CIDE
   DOCKERFILE = 'Dockerfile'
-  TEMPLATE = File.read(File.expand_path('../cide_template.erb', __FILE__))
+  SSHCONFIG_FILE = 'sshconfig'
+  DOCKERFILE_TEMPLATE = File.read(File.expand_path('../cide_template.erb', __FILE__))
+  SSHCONFIG_CONTENTS = File.read(File.expand_path('../sshconfig', __FILE__))
   CONFIG_FILE = '.cide.yml'
 
   CIDE_DIR = '/cide'
@@ -50,7 +52,7 @@ module CIDE
     end
 
     def to_dockerfile
-      ERB.new(TEMPLATE, nil, '<>-').result(binding)
+      ERB.new(DOCKERFILE_TEMPLATE, nil, '<>-').result(binding)
     end
 
     def merge!(opts = {})
@@ -122,6 +124,16 @@ module CIDE
         end
       else
         say_status :Dockerfile, 'Using existing Dockerfile'
+      end
+
+      if !File.exist?(SSHCONFIG_FILE)
+        say_status :sshconfig, 'Creating temporary sshconfig'
+        File.write(SSHCONFIG_FILE, SSHCONFIG_CONTENTS)
+        at_exit do
+          File.unlink(SSHCONFIG_FILE)
+        end
+      else
+        say_status :sshconfig, 'Using existing sshconfig'
       end
 
       docker :build, '-t', tag, '.'
