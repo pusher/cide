@@ -13,6 +13,7 @@ require 'thor'
 module CIDE
   DOCKERFILE = 'Dockerfile'
   SSHCONFIG_FILE = 'sshconfig'
+  TEMP_SSHKEY = 'id_rsa.tmp'
   DOCKERFILE_TEMPLATE = File.read(File.expand_path('../cide_template.erb', __FILE__))
   SSHCONFIG_CONTENTS = File.read(File.expand_path('../sshconfig', __FILE__))
   CONFIG_FILE = '.cide.yml'
@@ -118,6 +119,18 @@ module CIDE
       config.host_export_dir ||= config.export_dir
 
       tag = "cide/#{config.name}"
+
+      if File.exist?(config.sshkey)
+        say_status :SSHkey, 'Creating temp sshkey file within directory'
+        sshkey_contents = File.read(config.sshkey)
+        File.write(TEMP_SSHKEY, sshkey_contents)
+        config.sshkey = TEMP_SSHKEY
+        at_exit do
+          File.unlink(TEMP_SSHKEY)
+        end
+      else
+        say_status :SSHKey, 'No SSH key specified'
+      end
 
       say_status :config, config.to_h
 
