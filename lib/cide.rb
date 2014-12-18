@@ -12,11 +12,17 @@ require 'thor'
 # The juicy bits are defined in CIDE::CLI
 module CIDE
   DOCKERFILE = 'Dockerfile'
-  TEMPLATE = File.read(File.expand_path('../cide_template.erb', __FILE__))
+  SSH_CONFIG_FILE = 'ssh_config'
+  TEMP_SSH_KEY = 'id_rsa.tmp'
+  DOCKERFILE_TEMPLATE = File.read(
+    File.expand_path('../cide_template.erb', __FILE__),
+  )
+  SSH_CONFIG_CONTENTS = File.read(File.expand_path('../ssh_config', __FILE__))
   CONFIG_FILE = '.cide.yml'
 
   CIDE_DIR = '/cide'
   CIDE_SRC_DIR = File.join(CIDE_DIR, '/src')
+  CIDE_SSH_DIR = File.join(CIDE_DIR, '/.ssh')
 
   module_function
 
@@ -39,6 +45,7 @@ module CIDE
     export_dir: './artifacts',
     host_export_dir: nil,
     run: 'script/ci',
+    ssh_key: nil,
   ) do
 
     alias_method :image=, :from=
@@ -49,7 +56,7 @@ module CIDE
     end
 
     def to_dockerfile
-      ERB.new(TEMPLATE, nil, '<>-').result(binding)
+      ERB.new(DOCKERFILE_TEMPLATE, nil, '<>-').result(binding)
     end
 
     def merge!(opts = {})
@@ -98,6 +105,11 @@ module CIDE
       aliases: ['r'],
       default: nil
 
+    method_option 'ssh_key',
+      desc: 'The ssh key to put into the docker image',
+      aliases: ['s'],
+      default: nil
+
     def build
       setup_docker
 
@@ -110,6 +122,18 @@ module CIDE
 
       tag = "cide/#{config.name}"
 
+      if File.exist?(config.ssh_key)
+        say_status :SSHkey, 'Creating temp ssh key file within directory'
+        ssh_key_contents = File.read(config.ssh_key)
+        File.write(TEMP_SSH_KEY, ssh_key_contents)
+        config.ssh_key = TEMP_SSH_KEY
+        at_exit do
+          File.unlink(TEMP_SSH_KEY)
+        end
+      else
+        say_status :SSHKey, 'No SSH key specified'
+      end
+
       say_status :config, config.to_h
 
       # FIXME: Move Dockerfile out of the way if it exists
@@ -121,6 +145,16 @@ module CIDE
         end
       else
         say_status :Dockerfile, 'Using existing Dockerfile'
+      end
+
+      if !File.exist?(SSH_CONFIG_FILE)
+        say_status :ssh_config, 'Creating temporary ssh config'
+        File.write(SSH_CONFIG_FILE, SSH_CONFIG_CONTENTS)
+        at_exit do
+          File.unlink(SSH_CONFIG_FILE)
+        end
+      else
+        say_status :ssh_config, 'Using existing ssh config'
       end
 
       docker :build, '-t', tag, '.'
