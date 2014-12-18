@@ -14,7 +14,9 @@ module CIDE
   DOCKERFILE = 'Dockerfile'
   SSHCONFIG_FILE = 'sshconfig'
   TEMP_SSHKEY = 'id_rsa.tmp'
-  DOCKERFILE_TEMPLATE = File.read(File.expand_path('../cide_template.erb', __FILE__))
+  DOCKERFILE_TEMPLATE = File.read(
+    File.expand_path('../cide_template.erb', __FILE__),
+  )
   SSHCONFIG_CONTENTS = File.read(File.expand_path('../sshconfig', __FILE__))
   CONFIG_FILE = '.cide.yml'
 
