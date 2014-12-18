@@ -24,3 +24,10 @@ Style/SpecialGlobalVars:
 # Prefering the short style
 Style/PerlBackrefs:
   Enabled: false
+
+# Offense count: 28
+Metrics/CyclomaticComplexity:
+  Max: 15
+
+Metrics/PerceivedComplexity:
+  Max: 20
