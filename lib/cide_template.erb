@@ -33,6 +33,7 @@ ENV <%= key %> <%= ENV[key] %>
   <% before['add'].to_a.each do |file| -%>
 ADD <%= file %> <%= File.expand_path(file, CIDE_SRC_DIR) %>
   <% end %>
+RUN chown -R cide:cide <%= CIDE_DIR %>
 USER cide
 RUN <%= before['run'] %>
 USER root
