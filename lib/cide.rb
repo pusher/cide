@@ -123,7 +123,7 @@ module CIDE
       tag = "cide/#{config.name}"
 
       if config.ssh_key && File.exist?(config.ssh_key)
-        say_status :SSHkey, 'Creating temp ssh key file within directory'
+        say_status :ssh_key, 'Creating temp ssh key file within directory'
         ssh_key_contents = File.read(config.ssh_key)
         File.write(TEMP_SSH_KEY, ssh_key_contents)
         config.ssh_key = TEMP_SSH_KEY
@@ -131,7 +131,7 @@ module CIDE
           File.unlink(TEMP_SSH_KEY)
         end
       else
-        say_status :SSHKey, 'No SSH key specified'
+        say_status :ssh_key, 'No SSH key specified'
       end
 
       say_status :config, config.to_h
