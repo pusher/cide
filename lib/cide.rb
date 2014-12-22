@@ -206,7 +206,7 @@ module CIDE
       days_to_keep = options[:days]
       max_images = options[:count]
 
-      x = run('docker images --no-trunc', capture: true)
+      x = docker('images', '--no-trunc', capture: true)
       iter = x.lines.each
       iter.next
       cide_image_ids = iter
@@ -219,7 +219,7 @@ module CIDE
         return
       end
 
-      x = run("docker inspect #{cide_image_ids.join(' ')}", capture: true)
+      x = docker('inspect', *cide_image_ids, capture: true)
       cide_images = JSON.parse(x.strip)
         .each { |image| image['Created'] = Time.iso8601(image['Created']) }
         .sort { |a, b| a['Created'] <=> b['Created'] }
@@ -239,7 +239,7 @@ module CIDE
         return
       end
 
-      run("docker rmi #{old_cide_images.join(' ')}")
+      docker('rmi', *old_cide_images)
     end
 
     desc 'init', "Creates a blank #{CONFIG_FILE} into the project"
