@@ -24,6 +24,15 @@ module CIDE
   CIDE_SRC_DIR = File.join(CIDE_DIR, '/src')
   CIDE_SSH_DIR = File.join(CIDE_DIR, '/.ssh')
 
+  # Raised when a docker command exits with a status higher than zero
+  class DockerError < StandardError
+    attr_reader :exitstatus
+    def initialize(exitstatus)
+      @exitstatus = exitstatus
+      super("Failed with exitstatus #{exitstatus}")
+    end
+  end
+
   module_function
 
   def docker_id(str)
@@ -178,6 +187,8 @@ module CIDE
       ensure
         docker :rm, '-f', id
       end
+    rescue DockerError => ex
+      exit ex.exitstatus
     end
 
     desc 'clean', 'Removes old containers'
@@ -261,10 +272,10 @@ module CIDE
       )
     end
 
-    def docker(*args)
-      opts = args.last.is_a?(Hash) ? args.pop : {}
+    def docker(*args, **opts)
       ret = run Shellwords.join(['docker'] + args), opts
-      fail 'Command failed' if $?.exitstatus > 0
+      exitstatus = $?.exitstatus
+      fail DockerError, exitstatus if exitstatus > 0
       ret
     end
   end
