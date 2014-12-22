@@ -54,7 +54,8 @@ module CIDE
     export_dir: './artifacts',
     host_export_dir: nil,
     run: 'script/ci',
-    ssh_key: nil,
+    use_ssh: false,
+    ssh_key: '~/.ssh/id_rsa',
   ) do
 
     alias_method :image=, :from=
@@ -62,6 +63,10 @@ module CIDE
 
     def name=(str)
       super CIDE.docker_id(str)
+    end
+
+    def ssh_key_path
+      File.expand_path(ssh_key)
     end
 
     def to_dockerfile
@@ -115,9 +120,9 @@ module CIDE
       default: nil
 
     method_option 'ssh_key',
-      desc: 'The ssh key to put into the docker image',
+      desc: 'Path to a ssh key to import into the docker image',
       aliases: ['s'],
-      default: nil
+      default: '~/.ssh/id_rsa'
 
     def build
       setup_docker
@@ -131,16 +136,18 @@ module CIDE
 
       tag = "cide/#{config.name}"
 
-      if config.ssh_key && File.exist?(config.ssh_key)
-        say_status :ssh_key, 'Creating temp ssh key file within directory'
-        ssh_key_contents = File.read(config.ssh_key)
+      if config.use_ssh
+        unless File.exist?(config.ssh_key_path)
+          fail MalformattedArgumentError, "SSH key #{config.ssh_key} not found"
+        end
+
+        say_status :ssh_key, 'Creating temp SSH key file within directory'
+        ssh_key_contents = File.read(config.ssh_key_path)
         File.write(TEMP_SSH_KEY, ssh_key_contents)
         config.ssh_key = TEMP_SSH_KEY
         at_exit do
           File.unlink(TEMP_SSH_KEY)
         end
-      else
-        say_status :ssh_key, 'No SSH key specified'
       end
 
       say_status :config, config.to_h

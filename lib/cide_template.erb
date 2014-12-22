@@ -14,7 +14,7 @@ ENV HOME <%= CIDE_DIR %>
 WORKDIR <%= CIDE_SRC_DIR %>
 
 # SSH config
-<% if ssh_key -%>
+<% if use_ssh -%>
 ADD ssh_config <%= File.expand_path('config', CIDE_SSH_DIR) %>
 RUN chmod 400 <%= File.expand_path('config', CIDE_SSH_DIR) %>
 
