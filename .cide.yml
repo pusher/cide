@@ -1,0 +1,12 @@
+---
+from: ruby:2.1
+as_root:
+  - chown -R cide:cide /usr/local/bundle
+before:
+  add:
+    - Gemfile
+    - Gemfile.lock
+    - cide.gemspec
+  run: bundle
+use_ssh: false
+run: rake
