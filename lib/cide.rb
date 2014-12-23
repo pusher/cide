@@ -1,11 +1,12 @@
 require 'erb'
 require 'json'
 require 'optparse'
-require 'shellwords'
 require 'time'
 require 'yaml'
 
 require 'thor'
+
+require 'cide/docker'
 
 # CIDE is a Continuous Integration Docker Environment runner
 #
@@ -23,22 +24,6 @@ module CIDE
   CIDE_DIR = '/cide'
   CIDE_SRC_DIR = File.join(CIDE_DIR, '/src')
   CIDE_SSH_DIR = File.join(CIDE_DIR, '/.ssh')
-
-  # Raised when a docker command exits with a status higher than zero
-  class DockerError < StandardError
-    attr_reader :exitstatus
-    def initialize(exitstatus)
-      @exitstatus = exitstatus
-      super("Failed with exitstatus #{exitstatus}")
-    end
-  end
-
-  module_function
-
-  def docker_id(str)
-    # Replaces invalid docker tag characters by underscores
-    "#{str}".downcase.gsub(/[^a-z0-9\-_.]/, '_')
-  end
 
   def self.struct(opts = {}, &block)
     Class.new(Struct.new(*opts.keys), &block).new(*opts.values)
@@ -62,7 +47,7 @@ module CIDE
     alias_method :command=, :run=
 
     def name=(str)
-      super CIDE.docker_id(str)
+      super CIDE::Docker.id(str)
     end
 
     def ssh_key_path
@@ -92,7 +77,7 @@ module CIDE
 
   # Command-line option-parsing and execution for cide
   class CLI < Thor
-    include CIDE
+    include CIDE::Docker
     include Thor::Actions
 
     default_command 'build'
@@ -194,7 +179,7 @@ module CIDE
       ensure
         docker :rm, '-f', id
       end
-    rescue DockerError => ex
+    rescue Docker::Error => ex
       exit ex.exitstatus
     end
 
@@ -257,33 +242,6 @@ module CIDE
       end
       puts "Creating #{CONFIG_FILE} with default values"
       create_file CONFIG_FILE, DefaultConfig.to_yaml
-    end
-
-    protected
-
-    def setup_docker
-      @setup_docker ||= (
-        if `uname`.strip == 'Darwin' && !ENV['DOCKER_HOST']
-          unless system('which boot2docker >/dev/null 2>&1')
-            puts 'make sure boot2docker is installed and running'
-            puts
-            puts '> brew install boot2docker'
-            exit 1
-          end
-
-          `boot2docker shellinit 2>/dev/null`
-            .lines
-            .grep(/export (\w+)=(.*)/) { ENV[$1] = $2.strip }
-        end
-        true
-      )
-    end
-
-    def docker(*args, **opts)
-      ret = run Shellwords.join(['docker'] + args), opts
-      exitstatus = $?.exitstatus
-      fail DockerError, exitstatus if exitstatus > 0
-      ret
     end
   end
 end
