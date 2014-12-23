@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cide (0.0.7)
+    cide (0.0.8)
       thor
 
 GEM
