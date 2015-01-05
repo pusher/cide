@@ -79,6 +79,7 @@ module CIDE
   class CLI < Thor
     include CIDE::Docker
     include Thor::Actions
+    add_runtime_options!
 
     default_command 'build'
 
