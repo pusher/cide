@@ -128,7 +128,6 @@ module CIDE
 
         create_tmp_file SSH_CONFIG_FILE, File.read(SSH_CONFIG_PATH)
         create_tmp_file TEMP_SSH_KEY, File.read(config.ssh_key_path)
-        config.ssh_key = TEMP_SSH_KEY
       end
 
       say_status :config, config.to_h

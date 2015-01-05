@@ -18,7 +18,7 @@ WORKDIR <%= CIDE_SRC_DIR %>
 ADD ssh_config <%= File.expand_path('config', CIDE_SSH_DIR) %>
 RUN chmod 400 <%= File.expand_path('config', CIDE_SSH_DIR) %>
 
-ADD <%= ssh_key %> <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
+ADD <%= TEMP_SSH_KEY %> <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
 RUN chmod 400 <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
 RUN chmod 755 <%= CIDE_SSH_DIR %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
