@@ -12,13 +12,12 @@ require 'cide/docker'
 #
 # The juicy bits are defined in CIDE::CLI
 module CIDE
+  DIR = File.expand_path('..', __FILE__)
   DOCKERFILE = 'Dockerfile'
-  SSH_CONFIG_FILE = 'ssh_config'
   TEMP_SSH_KEY = 'id_rsa.tmp'
-  DOCKERFILE_TEMPLATE = File.read(
-    File.expand_path('../cide_template.erb', __FILE__),
-  )
-  SSH_CONFIG_CONTENTS = File.read(File.expand_path('../ssh_config', __FILE__))
+  DOCKERFILE_TEMPLATE = File.join(DIR, 'cide_template.erb')
+  SSH_CONFIG_FILE = 'ssh_config'
+  SSH_CONFIG_PATH = File.join(DIR, SSH_CONFIG_FILE)
   CONFIG_FILE = '.cide.yml'
 
   CIDE_DIR = '/cide'
@@ -55,7 +54,7 @@ module CIDE
     end
 
     def to_dockerfile
-      ERB.new(DOCKERFILE_TEMPLATE, nil, '<>-').result(binding)
+      ERB.new(File.read(DOCKERFILE_TEMPLATE), nil, '<>-').result(binding)
     end
 
     def merge!(opts = {})
@@ -127,37 +126,14 @@ module CIDE
           fail MalformattedArgumentError, "SSH key #{config.ssh_key} not found"
         end
 
-        say_status :ssh_key, 'Creating temp SSH key file within directory'
-        ssh_key_contents = File.read(config.ssh_key_path)
-        File.write(TEMP_SSH_KEY, ssh_key_contents)
+        create_tmp_file SSH_CONFIG_FILE, File.read(SSH_CONFIG_PATH)
+        create_tmp_file TEMP_SSH_KEY, File.read(config.ssh_key_path)
         config.ssh_key = TEMP_SSH_KEY
-        at_exit do
-          File.unlink(TEMP_SSH_KEY)
-        end
       end
 
       say_status :config, config.to_h
 
-      # FIXME: Move Dockerfile out of the way if it exists
-      if !File.exist?(DOCKERFILE)
-        say_status :Dockerfile, 'Creating temporary Dockerfile'
-        File.write(DOCKERFILE, config.to_dockerfile)
-        at_exit do
-          File.unlink(DOCKERFILE)
-        end
-      else
-        say_status :Dockerfile, 'Using existing Dockerfile'
-      end
-
-      if !File.exist?(SSH_CONFIG_FILE)
-        say_status :ssh_config, 'Creating temporary ssh config'
-        File.write(SSH_CONFIG_FILE, SSH_CONFIG_CONTENTS)
-        at_exit do
-          File.unlink(SSH_CONFIG_FILE)
-        end
-      else
-        say_status :ssh_config, 'Using existing ssh config'
-      end
+      create_tmp_file DOCKERFILE, config.to_dockerfile
 
       docker :build, '-t', tag, '.'
 
@@ -173,7 +149,8 @@ module CIDE
 
         host_export_dir = File.expand_path(
           config.host_export_dir || config.export_dir,
-          Dir.pwd)
+          Dir.pwd,
+        )
 
         docker :cp, [id, guest_export_dir].join(':'), host_export_dir
 
@@ -237,12 +214,17 @@ module CIDE
 
     desc 'init', "Creates a blank #{CONFIG_FILE} into the project"
     def init
-      if File.exist?(CONFIG_FILE)
-        puts "#{CONFIG_FILE} already exists"
-        return
-      end
       puts "Creating #{CONFIG_FILE} with default values"
       create_file CONFIG_FILE, DefaultConfig.to_yaml
+    end
+
+    private
+
+    def create_tmp_file(destination, *args, &block)
+      create_file(destination, *args, &block)
+      at_exit do
+        remove_file(destination, verbose: false)
+      end
     end
   end
 end
