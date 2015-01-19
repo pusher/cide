@@ -1,4 +1,11 @@
 
+0.1.0 / 2015-01-19
+==================
+
+  * cide is not compatible with ruby 1.9.3
+  * misc cleanup
+  * NEW: runtime options
+
 0.0.8 / 2014-12-18
 ==================
 
