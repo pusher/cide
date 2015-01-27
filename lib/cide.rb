@@ -134,7 +134,7 @@ module CIDE
 
       create_tmp_file DOCKERFILE, config.to_dockerfile
 
-      docker :build, '-t', tag, '.'
+      docker :build, '--force-rm', '-t', tag, '.'
 
       return unless config.export
 
