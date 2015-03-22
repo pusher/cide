@@ -29,14 +29,17 @@ executable cide
   default-extensions: OverloadedStrings
   -- other-extensions:
   build-depends:
+                      aeson,
                       base >=4.7 && <4.8,
                       containers,
                       directory,
-                      filepath,
+                      generic-deriving,
                       hslogger,
                       mtl,
                       optparse-applicative,
                       process,
+                      system-filepath,
+                      text,
                       turtle,
                       yaml
   hs-source-dirs:     src

@@ -1,8 +1,5 @@
 module Main where
 
-import Paths_cide (version)
-import Data.Version (showVersion)
-
 import Cide.Options
 -- import Cide.Build
 import Cide.Logging
@@ -12,6 +9,12 @@ import Cide.Logging
 import System.Exit
 -- import System.Directory
 import System.Process
+
+import qualified Cide.Commands.Build as Build
+import qualified Cide.Commands.Clean as Clean
+import qualified Cide.Commands.Init as Init
+import qualified Cide.Commands.Version as Version
+
 
 runProg :: Options -> IO ()
 runProg (Options logLevel cmd) = do
@@ -27,13 +30,13 @@ runProg' :: Command -> IO ()
 runProg' cmd =
     case cmd of
         BuildCommand options ->
-            putStrLn $ "building with " ++ show options
+            Build.run options
         CleanCommand options ->
-            putStrLn $ "cleaning with " ++ show options
-        InitCommand  ->
-            putStrLn "My kitchen is ready for cideing!"
+            Clean.run options
+        InitCommand options ->
+            Init.run options
         VersionCommand ->
-            putStrLn $ "cide v" ++ showVersion version
+            Version.run
 
 main :: IO ()
 main = withOptions runProg
