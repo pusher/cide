@@ -5,7 +5,7 @@ module Cide.Commands.Init
 
 import Prelude hiding (FilePath, concat)
 import Turtle
-import Filesystem.Path (concat)
+import Filesystem.Path.CurrentOS (concat)
 import Cide.BuildConfig (save, defaultConfig)
 
 data Options = Options

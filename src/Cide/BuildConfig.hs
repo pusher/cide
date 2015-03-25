@@ -14,7 +14,7 @@ import Generics.Deriving
 
 load :: FilePath -> IO (Either ParseException BuildConfig) 
 load path =
-	decodeFileEither (show path)
+	decodeFileEither (encodeString path)
 
 
 save :: FilePath -> BuildConfig -> IO ()
