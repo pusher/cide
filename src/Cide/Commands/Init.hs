@@ -3,10 +3,11 @@ module Cide.Commands.Init
 	, run
 	) where
 
-import Prelude hiding (FilePath, concat)
+import Prelude hiding (FilePath, concat, writeFile)
 import Turtle
+import Filesystem (writeFile)
 import Filesystem.Path.CurrentOS (concat)
-import Cide.BuildConfig (save, defaultConfig)
+import Cide.BuildConfig (configTemplate)
 
 data Options = Options
 	{ dir :: FilePath }
@@ -17,4 +18,4 @@ run (Options dir') =
 	let
 		target = concat [dir', ".cide.yml"]
 	in
-		save target defaultConfig
+		writeFile target configTemplate

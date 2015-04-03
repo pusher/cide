@@ -18,25 +18,25 @@ import qualified Cide.Commands.Version as Version
 
 runProg :: Options -> IO ()
 runProg (Options logLevel cmd) = do
-    initLoggingFramework logLevel
-    ec <- system "command -v docker >/dev/null 2>&1"
-    case ec of
-        ExitSuccess ->
-            runProg' cmd
-        ExitFailure _ ->
-            error "cide requires docker. Install from http://docker.com"
+  initLoggingFramework logLevel
+  ec <- system "which docker >/dev/null"
+  case ec of
+    ExitSuccess ->
+      runProg' cmd
+    ExitFailure _ ->
+      error "cide requires docker. Install from http://docker.com"
 
 runProg' :: Command -> IO ()
 runProg' cmd =
-    case cmd of
-        BuildCommand options ->
-            Build.run options
-        CleanCommand options ->
-            Clean.run options
-        InitCommand options ->
-            Init.run options
-        VersionCommand ->
-            Version.run
+  case cmd of
+    BuildCommand options ->
+      Build.run options
+    CleanCommand options ->
+      Clean.run options
+    InitCommand options ->
+      Init.run options
+    VersionCommand ->
+      Version.run
 
 main :: IO ()
 main = withOptions runProg

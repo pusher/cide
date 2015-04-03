@@ -1,10 +1,10 @@
 module Cide.Logging
-    ( initLoggingFramework
-    , logInfo
-    , logDebug
-    , logWarn
-    , logError
-    ) where
+  ( initLoggingFramework
+  , logInfo
+  , logDebug
+  , logWarn
+  , logError
+  ) where
 
 import Control.Monad.Trans
 
@@ -16,10 +16,10 @@ import System.Log.Logger
 
 initLoggingFramework :: Priority -> IO ()
 initLoggingFramework prio = do
-    myStreamHandler <- streamHandler stdout prio
-    let myStreamHandler' = setFormatter myStreamHandler (simpleLogFormatter "[$prio $time $loggername] $msg")
-    root <- getRootLogger
-    saveGlobalLogger (setLevel DEBUG $ setHandlers [myStreamHandler'] root)
+  myStreamHandler <- streamHandler stdout prio
+  let myStreamHandler' = setFormatter myStreamHandler (simpleLogFormatter "[$prio $time $loggername] $msg")
+  root <- getRootLogger
+  saveGlobalLogger (setLevel DEBUG $ setHandlers [myStreamHandler'] root)
 
 logInfo :: MonadIO m => String -> m ()
 logInfo = liftIO . infoM "cide"
