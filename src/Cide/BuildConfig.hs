@@ -25,27 +25,27 @@ filename = ".cide.yml"
 
 load :: FilePath -> IO (Either ParseException BuildConfig) 
 load path =
-	decodeFileEither (Path.encodeString path)
+  decodeFileEither (Path.encodeString path)
 
 parse :: ByteString -> Maybe BuildConfig
 parse = decode
 
 find :: IO (Maybe FilePath)
 find = do
-	dir <- liftIO $ getWorkingDirectory
-	findUp dir
-	where
-		findUp :: FilePath -> IO (Maybe FilePath)
-		findUp dir = do
-			let filepath = Path.concat [dir, filename]
-			exists <- isFile filepath
-			if exists then
-				return $ Just filepath
-			else
-				if dir == Path.root dir then
-					return Nothing
-				else
-					findUp (Path.directory dir)
+  dir <- liftIO $ getWorkingDirectory
+  findUp dir
+  where
+    findUp :: FilePath -> IO (Maybe FilePath)
+    findUp dir = do
+      let filepath = Path.concat [dir, filename]
+      exists <- isFile filepath
+      if exists then
+        return $ Just filepath
+      else
+        if dir == Path.root dir then
+          return Nothing
+        else
+          findUp (Path.directory dir)
 
 
 --
@@ -53,23 +53,23 @@ find = do
 configTemplate = $(embedFile $ $__FILE__ ++ ".yml")
 
 defaultConfig = BuildConfig
-	"ubuntu:14.04"
-	emptyBuildstep emptyBuildstep emptyBuildstep
-	"artifacts" False "script/ci"
+  "ubuntu:14.04"
+  emptyBuildstep emptyBuildstep emptyBuildstep
+  "artifacts" False "script/ci"
 
 emptyBuildstep = BuildStep empty (Left []) []
 
 --
 
 data BuildConfig = BuildConfig 
-	{ from :: String
-	, bootstrap :: BuildStep
-	, as_root :: BuildStep
-	, before :: BuildStep
-	, export_dir :: String
-	, ssh_key :: Bool
-	, run :: String
-	} deriving (Show, Eq, Generic)
+  { from :: String
+  , bootstrap :: BuildStep
+  , as_root :: BuildStep
+  , before :: BuildStep
+  , export_dir :: String
+  , ssh_key :: Bool
+  , run :: String
+  } deriving (Show, Eq, Generic)
 
 instance ToJSON BuildConfig where
   toJSON = genericToJSON defaultOptions
@@ -80,9 +80,9 @@ instance FromJSON BuildConfig where
 --
 
 data BuildStep = BuildStep
-	{ env :: Map String String
-	, add :: Either [String] (Map String String)
-	, cmd :: [String]
+  { env :: Map String String
+  , add :: Either [String] (Map String String)
+  , cmd :: [String]
   } deriving (Show, Eq, Generic)
 
 instance ToJSON BuildStep where

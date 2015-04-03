@@ -1,7 +1,7 @@
 module Cide.Commands.Clean
-	( Options(..)
-	, run
-	) where
+  ( Options(..)
+  , run
+  ) where
 
 data Options = Options
   { days :: Integer

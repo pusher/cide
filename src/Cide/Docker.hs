@@ -5,9 +5,9 @@ import System.Process (readProcess)
 import Text.Regexp (mkRegex, matchRegex)
 
 data DockerEnv =
-	DockerEnv {
-		env :: [(String, String)]
-	} deriving (Show)
+  DockerEnv {
+  env :: [(String, String)]
+  } deriving (Show)
 
 withDocker :: IO (DockerEnv)
 #if defined(CABAL_OS_DARWIN)
@@ -17,29 +17,29 @@ withDocker = checkDocker
 #endif
 
 checkDocker nextStep = do
-	ec <- system "which docker >/dev/null"
+  ec <- system "which docker >/dev/null"
   case ec of
-    ExitSuccess ->
-      DockerEnv []
-    ExitFailure _ ->
-      error "cide requires docker. Install from http://docker.com"
+  ExitSuccess ->
+    DockerEnv []
+  ExitFailure _ ->
+    error "cide requires docker. Install from http://docker.com"
 
 envRegex = mkRegex "export (\w+)=(.*)"
 
 setupWithBoot2docker nextStep = do
-	dockerHost <- getEnv("DOCKER_HOST")
-	if dockerHost == ""
-		ec <- system "which boot2docker >/dev/null"
-		case ec of
-			ExitSuccess ->
-				setupDocker
-			ExitFailure ->
-				error "cide requires boot2docker on OSX to work. Install from http://boot2docker.io"
-	where
-		setupDocker = do
-			envStr <- readProcess "boot2docker" ["shellinit"] []
-			DockerEnv $ map kv $ lines envStr
+  dockerHost <- getEnv("DOCKER_HOST")
+  if dockerHost == ""
+  ec <- system "which boot2docker >/dev/null"
+  case ec of
+    ExitSuccess ->
+      setupDocker
+    ExitFailure ->
+      error "cide requires boot2docker on OSX to work. Install from http://boot2docker.io"
+  where
+  setupDocker = do
+    envStr <- readProcess "boot2docker" ["shellinit"] []
+    DockerEnv $ map kv $ lines envStr
 
-		kv str =
-			Just [k,v] = matchRegex envRegex str
-			(k, v)
+  kv str =
+    Just [k,v] = matchRegex envRegex str
+    (k, v)

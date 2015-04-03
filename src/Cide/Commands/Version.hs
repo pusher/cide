@@ -1,6 +1,6 @@
 module Cide.Commands.Version
-	( run
-	) where
+  ( run
+  ) where
 
 import Paths_cide (version)
 import Data.Version (showVersion)

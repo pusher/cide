@@ -1,7 +1,7 @@
 module Cide.Commands.Build 
-	( Options(..)
-	, run
-	) where
+  ( Options(..)
+  , run
+  ) where
 
 import Prelude hiding (FilePath, putStr)
 import Turtle
@@ -22,7 +22,7 @@ run _ = do
   putStr (repr defaultConfig)
   mkdir "test"
   output "test/foo" "Hello, world!"  -- Write "Hello, world!" to "test/foo"
-  stdout (input "test/foo")      -- Stream "test/foo" to stdout
+  stdout (input "test/foo")    -- Stream "test/foo" to stdout
   rm "test/foo"
   rmdir "test"
   sleep 1
