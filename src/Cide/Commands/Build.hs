@@ -5,7 +5,7 @@ module Cide.Commands.Build
 
 import Prelude hiding (FilePath, putStr)
 import Turtle
-import Cide.BuildConfig (defaultConfig)
+import qualified Cide.BuildConfig as Config
 import Data.Text.IO (putStr)
 
 data Options = Options
@@ -18,12 +18,11 @@ data Options = Options
 
 run :: Options -> IO ()
 run _ = do
-  cd "/tmp"
-  putStr (repr defaultConfig)
+  config <- Config.find
+  putStr (repr config)
   mkdir "test"
   output "test/foo" "Hello, world!"  -- Write "Hello, world!" to "test/foo"
   stdout (input "test/foo")    -- Stream "test/foo" to stdout
   rm "test/foo"
   rmdir "test"
-  sleep 1
   die "Urk!"

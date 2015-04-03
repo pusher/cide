@@ -1,13 +1,9 @@
 module Main where
 
 import Cide.Options
--- import Cide.Build
 import Cide.Logging
--- import Cide.Types
 
--- import Control.Monad
 import System.Exit
--- import System.Directory
 import System.Process
 
 import qualified Cide.Commands.Build as Build
