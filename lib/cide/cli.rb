@@ -53,7 +53,7 @@ module CIDE
 
       if build.use_ssh
         unless File.exist?(options.ssh_key)
-          fail MalformattedArgumentError, "SSH key #{options.ssh_key} not found"
+          fail ArgumentError, "SSH key #{options.ssh_key} not found"
         end
 
         create_tmp_file SSH_CONFIG_FILE, File.read(SSH_CONFIG_PATH)
@@ -67,12 +67,9 @@ module CIDE
       docker :build, '--force-rm', '-f', DOCKERFILE, '-t', tag, '.'
 
       return unless options.export
+      fail 'export flag set but no export dir given' unless build.export_dir
 
-      unless build.export_dir
-        fail 'Fail: export flag set but no export dir given'
-      end
-
-      id = docker(:run, '-d', tag, true, capture: true).strip
+      id = docker(:run, '-d', tag, 'true', capture: true).strip
       begin
         guest_export_dir = File.expand_path(build.export_dir, CIDE_SRC_DIR)
         host_export_dir  = File.expand_path(options.export_dir, Dir.pwd)
