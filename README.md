@@ -39,6 +39,8 @@ Limitations
 A temporary Dockerfile has to be created in the project's root because docker
 doesn't allow referencing files outside of the directory (even with a symlink)
 
+Docker version 1.5.0+ is required
+
 Installation
 ------------
 
@@ -61,6 +63,5 @@ TODO
 
 * linked container
 * schema validation
-* find a way to import SSH keys
 * cleaner output. on error is just outputs a backtrace
 
