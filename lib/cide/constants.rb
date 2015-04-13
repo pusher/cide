@@ -1,6 +1,6 @@
 module CIDE
 	DIR = File.expand_path('..', __FILE__)
-  DOCKERFILE = 'Dockerfile'
+  DOCKERFILE = 'Dockerfile.cide'
   TEMP_SSH_KEY = 'id_rsa.tmp'
   SSH_CONFIG_FILE = 'ssh_config'
   SSH_CONFIG_PATH = File.join(DIR, 'cide', SSH_CONFIG_FILE)
