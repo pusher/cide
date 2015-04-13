@@ -1,6 +1,7 @@
 require "cide/docker"
 
 require "erb"
+require "yaml"
 
 module CIDE
 	def self.struct(opts = {}, &block)
@@ -10,17 +11,14 @@ module CIDE
   DOCKERFILE_TEMPLATE = File.expand_path('../dockerfile_template.erb', __FILE__)
 
   BuildConfig = struct(
-    name: nil,
     from: 'ubuntu',
     as_root: [],
     forward_env: [],
     before: {},
     export: false,
-    export_dir: './artifacts',
-    host_export_dir: nil,
-    run: 'script/ci',
+    export_dir: nil,
     use_ssh: false,
-    ssh_key: '~/.ssh/id_rsa',
+    run: 'script/ci',
   ) do
 
     alias_method :image=, :from=
@@ -45,6 +43,10 @@ module CIDE
 
     def merge(opts = {})
       dup.merge!(opts)
+    end
+
+    def load_file(file_path)
+      merge YAML.load_file(file_path)
     end
 
     def to_yaml
