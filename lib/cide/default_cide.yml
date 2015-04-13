@@ -1,0 +1,9 @@
+---
+# See https://github.com/zimbatm/cide
+from: ubuntu
+as_root: []
+forward_env: []
+before:
+use_ssh: false
+export_dir:
+run: script/ci

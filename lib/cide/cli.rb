@@ -1,6 +1,6 @@
 require 'cide/constants'
 require 'cide/docker'
-require 'cide/build_config'
+require 'cide/build'
 
 require 'thor'
 
@@ -46,10 +46,10 @@ module CIDE
     def build
       setup_docker
 
-      build = BuildConfig.load_file CONFIG_FILE
+      build = Build::Config.load_file CONFIG_FILE
       options.export_dir ||= build.export_dir
       build.run = options.run if options.run
-      tag = "cide/#{options.name}"
+      tag = "cide/#{CIDE::Docker.id options.name}"
 
       if build.use_ssh
         unless File.exist?(options.ssh_key)
@@ -67,7 +67,7 @@ module CIDE
       docker :build, '--force-rm', '-f', DOCKERFILE, '-t', tag, '.'
 
       return unless options.export
-      fail 'export flag set but no export dir given' unless build.export_dir
+      fail 'export flag set but no export_dir given' if build.export_dir.nil?
 
       id = docker(:run, '-d', tag, 'true', capture: true).strip
       begin
@@ -137,7 +137,7 @@ module CIDE
     desc 'init', "Creates a blank #{CONFIG_FILE} into the project"
     def init
       puts "Creating #{CONFIG_FILE} with default values"
-      create_file CONFIG_FILE, BuildConfig.to_yaml
+      create_file CONFIG_FILE, File.read(DEFAULT_CIDEFILE)
     end
 
     private
