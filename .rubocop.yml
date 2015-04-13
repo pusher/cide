@@ -1,33 +1,46 @@
+# Rubocop is not smart enough
+Metrics/AbcSize:
+  Max: 60
+
 # CIDE::CLI is essentially a big dispatcher, no need to break it
 # in smaller chunks.
 Metrics/ClassLength:
   Max: 200
+
+# Offense count: 28
+Metrics/CyclomaticComplexity:
+  Max: 15
 
 # CIDE::CLI methods can be read top to bottom. No need to factor out
 # functionality unless it can be shared.
 Metrics/MethodLength:
   Max: 60
 
+Metrics/PerceivedComplexity:
+  Max: 20
+
 # Don't align stuff vertically, bad for diffing
 Style/AlignParameters:
   EnforcedStyle: with_fixed_indentation
 
-# Allows for easy diffing
-# Keep them sorted alphabetically unless a meaningful order exists
-Style/TrailingComma:
-  EnforcedStyleForMultiline: comma
+# Don't obsess over missing documentation for now
+Style/Documentation:
+  Enabled: false
 
-# $? is not equivalent to $CHILD_STATUS
-Style/SpecialGlobalVars:
+# Don't agree with rubocop here
+Style/MultilineOperationIndentation:
   Enabled: false
 
 # Prefering the short style
 Style/PerlBackrefs:
   Enabled: false
 
-# Offense count: 28
-Metrics/CyclomaticComplexity:
-  Max: 15
+# $? is not equivalent to $CHILD_STATUS
+Style/SpecialGlobalVars:
+  Enabled: false
 
-Metrics/PerceivedComplexity:
-  Max: 20
+# Allows for easy diffing
+# Keep them sorted alphabetically unless a meaningful order exists
+Style/TrailingComma:
+  EnforcedStyleForMultiline: comma
+

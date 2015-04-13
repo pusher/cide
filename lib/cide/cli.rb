@@ -1,14 +1,14 @@
-require "cide/constants"
-require "cide/docker"
-require "cide/build_config"
+require 'cide/constants'
+require 'cide/docker'
+require 'cide/build_config'
 
-require "thor"
+require 'thor'
 
-require "json"
-require "time"
+require 'json'
+require 'time'
 
 module CIDE
-	# Command-line option-parsing and execution for cide
+  # Command-line option-parsing and execution for cide
   class CLI < Thor
     include CIDE::Docker
     include Thor::Actions
@@ -30,7 +30,7 @@ module CIDE
 
     method_option 'export_dir',
       desc: 'Change the ouput directory on the host',
-      aliases: ['o', 'host_export_dir'],
+      aliases: %w(o host_export_dir),
       default: nil
 
     method_option 'run',
@@ -106,7 +106,7 @@ module CIDE
       iter.next
       cide_image_ids = iter
         .map { |line| line.split(/\s+/) }
-        .select { |line| line[0] =~ /^cide\// || line[0] == '<none>' }
+        .select { |line| line[0] =~ %r{^cide/} || line[0] == '<none>' }
         .map { |line| line[2] }
 
       if cide_image_ids.empty?

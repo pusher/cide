@@ -1,10 +1,10 @@
-require "cide/docker"
+require 'cide/docker'
 
-require "erb"
-require "yaml"
+require 'erb'
+require 'yaml'
 
 module CIDE
-	def self.struct(opts = {}, &block)
+  def self.struct(opts = {}, &block)
     Class.new(Struct.new(*opts.keys), &block).new(*opts.values)
   end
 
@@ -20,7 +20,6 @@ module CIDE
     use_ssh: false,
     run: 'script/ci',
   ) do
-
     alias_method :image=, :from=
     alias_method :command=, :run=
 

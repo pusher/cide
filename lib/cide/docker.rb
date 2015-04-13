@@ -45,13 +45,11 @@ module CIDE
             .grep(/export (\w+)=(.*)/) { ENV[$1] = $2.strip }
         end
 
-        if `docker version 2>/dev/null` =~ /Client version: ([^\s]+)/
-          if $1 < "1.5.0"
-            fail VersionError, "Docker version #{$1} too old"
-          end
-        else
-          $stderr.puts "Unknown docker version"
+        # Check docker version
+        unless `docker version 2>/dev/null` =~ /Client version: ([^\s]+)/
+          fail VersionError, 'Unknown docker version'
         end
+        fail VersionError, "Docker version #{$1} too old" if $1 < '1.5.0'
 
         true
       )
