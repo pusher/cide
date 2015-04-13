@@ -58,6 +58,13 @@ boot2docker up
 # cide auto-detects boot2docker on OSX
 ```
 
+Similar projects
+----------------
+
+* [Docker Compose](https://docs.docker.com/compose/) - Docker development environment
+
+Open an issue if a project is missing.
+
 TODO
 ----
 
