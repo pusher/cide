@@ -26,16 +26,16 @@ RUN chown -R cide:cide <%= CIDE_DIR %>
 
 # Before
 
-<% if before['run'] -%>
-  <% before['forward_env'].to_a.each do |key| -%>
+<% if before -%>
+  <% before.forward_env.each do |key| -%>
 ENV <%= key %> <%= ENV[key] %>
   <% end %>
-  <% before['add'].to_a.each do |file| -%>
+  <% before.add.each do |file| -%>
 ADD <%= file %> <%= File.expand_path(file, CIDE_SRC_DIR) %>
   <% end %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
 USER cide
-RUN <%= before['run'] %>
+RUN <%= before.run %>
 USER root
 <% end -%>
 
@@ -43,14 +43,3 @@ USER root
 
 ADD . <%= CIDE_SRC_DIR %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
-
-# ENV
-
-<% forward_env.to_a.each do |key| -%>
-ENV <%= key %> <%= ENV[key] %>
-<% end %>
-
-# Test !
-
-USER cide
-RUN <%= run %>

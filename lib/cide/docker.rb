@@ -17,6 +17,8 @@ module CIDE
       end
     end
 
+    class VersionError < StandardError; end
+
     def docker(*args, **opts)
       setup_docker
 
@@ -42,6 +44,13 @@ module CIDE
             .lines
             .grep(/export (\w+)=(.*)/) { ENV[$1] = $2.strip }
         end
+
+        # Check docker version
+        unless `docker version 2>/dev/null` =~ /Client version: ([^\s]+)/
+          fail VersionError, 'Unknown docker version'
+        end
+        fail VersionError, "Docker version #{$1} too old" if $1 < '1.5.0'
+
         true
       )
     end

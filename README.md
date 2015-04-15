@@ -20,7 +20,7 @@ Example
 `.cide.yml`
 ```
 ---
-image: "ruby:2.1"
+from: "ruby:2.1"
 as_root:
 - apt-get update -qy && apt-get install -qy libxml2-dev
 command: bundle && bundle exec rspec
@@ -32,35 +32,34 @@ Features
 * straighforward to use, just run `cide` inside of your project
 * works on OSX with boot2docker
 * integrates easily with jenkins or other CI systems
+* can run with linked containers
 
 Limitations
 -----------
 
-A temporary Dockerfile has to be created in the project's root because docker
-doesn't allow referencing files outside of the directory (even with a symlink)
+Docker version 1.5.0+ is required
 
 Installation
 ------------
 
 Install docker: https://docs.docker.com/installation/#installation
 
-```
+```sh
 gem install cide
 ```
 
 OSX docker install:
-```
+```sh
 brew install boot2docker
 boot2docker init
 boot2docker up
 # cide auto-detects boot2docker on OSX
 ```
 
-TODO
-----
+Similar projects
+----------------
 
-* linked container
-* schema validation
-* find a way to import SSH keys
-* cleaner output. on error is just outputs a backtrace
+* [Docker Compose](https://docs.docker.com/compose/) - Docker development environment
+
+Open an issue if a project is missing.
 
