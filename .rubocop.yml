@@ -1,3 +1,7 @@
+AllCops:
+  Exclude:
+    - 'spec/**/*'
+
 # Rubocop is not smart enough
 Metrics/AbcSize:
   Max: 60

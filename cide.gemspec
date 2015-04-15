@@ -24,4 +24,6 @@ DESC
   s.add_runtime_dependency 'virtus', '~> 1.0.0'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rubocop'
+  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'activesupport'
 end

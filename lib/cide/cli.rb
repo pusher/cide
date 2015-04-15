@@ -46,7 +46,9 @@ module CIDE
     def build
       setup_docker
 
+      ## Config ##
       build = Build::Config.load_file CONFIG_FILE
+      exit 1 if build.nil?
       options.export_dir ||= build.export_dir
       build.run = options.run if options.run
       tag = "cide/#{CIDE::Docker.id options.name}"
