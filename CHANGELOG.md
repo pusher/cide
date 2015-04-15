@@ -1,4 +1,14 @@
 
+0.2.0 / 2015-04-15
+==================
+
+  * NEW: .cide.yml schema loader
+  * NEW: Support for linked containers
+  * NEW: Much better build output
+  * CHANGE: Docker version: 1.5.0+ is required
+  * FIX: Avoid name clashes with projects who have a Dockerfile already
+  * FIX: cide --export
+
 0.1.1 / 2015-01-27
 ==================
 
