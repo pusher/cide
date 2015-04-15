@@ -11,8 +11,19 @@ module CIDE
       DOCKERFILE_TEMPLATE =
         File.expand_path('../../dockerfile_template.erb', __FILE__)
 
+      module NiceInspect
+        def inspect
+          out = []
+          attributes.each_pair do |key, value|
+            out << "#{key}=#{value.inspect}"
+          end
+          "<#{out.join(' ')}>"
+        end
+      end
+
       class Step
         include Virtus.model(strict: true)
+        include NiceInspect
         attribute :add, Array[String], default: []
         attribute :forward_env, Array[String], default: []
         attribute :run, Array[String], default: []
@@ -20,6 +31,7 @@ module CIDE
 
       class Link
         include Virtus.model
+        include NiceInspect
         attribute :name, String
         attribute :image, String
         attribute :env, Hash[String, String]
@@ -29,6 +41,7 @@ module CIDE
       end
 
       include Virtus.model(strict: true)
+      include NiceInspect
       attribute :from, String, default: 'ubuntu'
       attribute :as_root, Array[String], default: []
       attribute :use_ssh, Boolean, default: false
@@ -38,8 +51,13 @@ module CIDE
       attribute :links, Array[Link], default: []
       attribute :run, String, default: 'script/ci'
 
-      attribute :infos, Array[String], default: []
-      attribute :errors, Array[String], default: []
+      attr_reader :warnings, :errors
+
+      def initialize(*)
+        super
+        @warnings = []
+        @errors = []
+      end
 
       def to_dockerfile
         ERB.new(File.read(DOCKERFILE_TEMPLATE), nil, '<>-').result(binding)
@@ -50,8 +68,8 @@ module CIDE
         loader = ConfigLoader.new(obj)
         loader.load YAML.load_file(file_path)
 
-        obj.infos.each do |info|
-          output.puts info
+        obj.warnings.each do |warn|
+          output.puts "WARN: #{warn}"
         end
 
         obj.errors.each do |error|

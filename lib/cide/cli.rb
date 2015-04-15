@@ -49,14 +49,17 @@ module CIDE
       setup_docker
 
       ## Config ##
+      banner 'Config'
       build = Build::Config.load_file CONFIG_FILE
       exit 1 if build.nil?
       options.export_dir ||= build.export_dir
       build.run = options.run if options.run
       name = CIDE::Docker.id options.name
       tag = "cide/#{name}"
+      say_status :config, build.inspect
 
       ## Build ##
+      banner 'Build'
       if build.use_ssh
         unless File.exist?(options.ssh_key)
           fail ArgumentError, "SSH key #{options.ssh_key} not found"
@@ -69,6 +72,7 @@ module CIDE
       docker :build, '--force-rm', '--pull', '-f', DOCKERFILE, '-t', tag, '.'
 
       ## CI ##
+      banner 'Run'
       build.links.each do |link|
         args = ['--detach']
         link.env.each_pair do |key, value|
@@ -99,6 +103,8 @@ module CIDE
 
       ## Export ##
       return unless options.export
+      banner 'Export'
+      p [options.export_dir, build.export_dir]
       fail 'export flag set but no export_dir given' if build.export_dir.nil?
 
       guest_export_dir = File.expand_path(build.export_dir, CIDE_SRC_DIR)
@@ -179,6 +185,12 @@ module CIDE
       at_exit do
         remove_file(destination, verbose: false)
       end
+    end
+
+    LINE_SIZE = 78.0
+    def banner(text)
+      pad = (LINE_SIZE - text.size - 4) / 2
+      puts '=' * pad.floor + "[ #{text} ]" + '=' * pad.ceil
     end
   end
 end

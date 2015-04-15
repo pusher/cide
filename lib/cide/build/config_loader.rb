@@ -52,11 +52,12 @@ module CIDE
 
       def wanted_key(path, wanted_key, key)
         return if key == wanted_key
-        @config.infos << "#{path} is deprecated. use '#{wanted_key}' instead."
+        @config.warnings <<
+          "#{path} is deprecated. use '#{wanted_key}' instead."
       end
 
       def unknown_key(path)
-        @config.infos << "Unknown key #{path}"
+        @config.warnings << "Unknown key #{path}"
       end
 
       def type_error(path, wanted_type, value)

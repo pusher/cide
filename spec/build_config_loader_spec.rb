@@ -18,13 +18,13 @@ describe "CIDE::Build::Config::Loader" do
     "export_dir" => nil,
     "links" => [],
     "run" => "script/ci",
-    "infos" => [],
-    "errors" => [],
   }
 
   it "works - empty config" do
     @loader.load({})
     expect(@config.as_json).to eq(default_config)
+    expect(@config.warnings).to eq([])
+    expect(@config.errors).to eq([])
   end
 
   it "works2 - full config" do
@@ -48,6 +48,8 @@ describe "CIDE::Build::Config::Loader" do
     @loader.load(full_config)
 
     expect(@config.as_json).to eq(default_config.merge(full_config))
+    expect(@config.warnings).to eq([])
+    expect(@config.errors).to eq([])
   end
 
   it "coerces things around" do
@@ -71,6 +73,8 @@ describe "CIDE::Build::Config::Loader" do
       ],
       "forward_env" => ["HOME", "555"],
     ))
+    expect(@config.warnings).to eq([])
+    expect(@config.errors).to eq([])
   end
 
   it "notifies deprecations" do
@@ -82,12 +86,13 @@ describe "CIDE::Build::Config::Loader" do
     expect(@config.as_json).to eq(default_config.merge(
       "from" => "foo",
       "run" => "lol",
-      "infos" => [
-        "image is deprecated. use 'from' instead.",
-        "command is deprecated. use 'run' instead.",
-        "Unknown key zzz",
-      ]
     ))
+    expect(@config.warnings).to eq([
+      "image is deprecated. use 'from' instead.",
+      "command is deprecated. use 'run' instead.",
+      "Unknown key zzz",
+    ])
+    expect(@config.errors).to eq([])
   end
 
   it "reports type errors" do
@@ -99,12 +104,13 @@ describe "CIDE::Build::Config::Loader" do
 
     expect(@config.to_h.as_json).to eq(default_config.merge(
       "as_root" => ["aaa", ""],
-      "errors" => [
-        "expected as_root[1] to be a string but got a Time",
-        "expected forward_env to be a array of string, string or nil but got a Hash",
-        "expected links to be a expected hash to either declare the name or image but got a Hash",
-      ]
     ))
+    expect(@config.warnings).to eq([])
+    expect(@config.errors).to eq([
+      "expected as_root[1] to be a string but got a Time",
+      "expected forward_env to be a array of string, string or nil but got a Hash",
+      "expected links to be a expected hash to either declare the name or image but got a Hash",
+    ])
   end
 
 end
