@@ -52,7 +52,7 @@ module CIDE
       banner 'Config'
       build = Build::Config.load_file CONFIG_FILE
       exit 1 if build.nil?
-      options.export_dir ||= build.export_dir
+      export_dir = options.export_dir || File.dirname(build.export_dir)
       build.run = options.run if options.run
       name = CIDE::Docker.id options.name
       tag = "cide/#{name}"
@@ -104,11 +104,10 @@ module CIDE
       ## Export ##
       return unless options.export
       banner 'Export'
-      p [options.export_dir, build.export_dir]
       fail 'export flag set but no export_dir given' if build.export_dir.nil?
 
       guest_export_dir = File.expand_path(build.export_dir, CIDE_SRC_DIR)
-      host_export_dir  = File.expand_path(options.export_dir, Dir.pwd)
+      host_export_dir  = File.expand_path(export_dir, Dir.pwd)
       docker :cp, [id, guest_export_dir].join(':'), host_export_dir
     rescue Docker::Error => ex
       exit ex.exitstatus
