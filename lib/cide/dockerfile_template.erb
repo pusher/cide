@@ -43,14 +43,3 @@ USER root
 
 ADD . <%= CIDE_SRC_DIR %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
-
-# ENV
-
-<% forward_env.each do |key| -%>
-ENV <%= key %> <%= ENV[key] %>
-<% end %>
-
-# Test !
-
-USER cide
-RUN <%= run %>

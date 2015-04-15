@@ -4,7 +4,7 @@ AllCops:
 
 # Rubocop is not smart enough
 Metrics/AbcSize:
-  Max: 60
+  Max: 100
 
 # CIDE::CLI is essentially a big dispatcher, no need to break it
 # in smaller chunks.

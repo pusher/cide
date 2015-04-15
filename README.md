@@ -68,7 +68,6 @@ Open an issue if a project is missing.
 TODO
 ----
 
-* linked container
 * schema validation
 * cleaner output. on error is just outputs a backtrace
 

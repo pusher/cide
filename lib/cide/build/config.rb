@@ -18,6 +18,16 @@ module CIDE
         attribute :run, Array[String], default: []
       end
 
+      class Link
+        include Virtus.model
+        attribute :name, String
+        attribute :image, String
+        attribute :env, Hash[String, String]
+        attribute :run, String
+        # Container ID added after the fact
+        attr_accessor :id
+      end
+
       include Virtus.model(strict: true)
       attribute :from, String, default: 'ubuntu'
       attribute :as_root, Array[String], default: []
@@ -25,6 +35,7 @@ module CIDE
       attribute :before, Step, required: false
       attribute :forward_env, Array[String], default: []
       attribute :export_dir, String, required: false
+      attribute :links, Array[Link], default: []
       attribute :run, String, default: 'script/ci'
 
       attribute :infos, Array[String], default: []

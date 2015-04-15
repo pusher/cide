@@ -16,6 +16,7 @@ describe "CIDE::Build::Config::Loader" do
     "before" => nil,
     "forward_env" => [],
     "export_dir" => nil,
+    "links" => [],
     "run" => "script/ci",
     "infos" => [],
     "errors" => [],
@@ -37,6 +38,9 @@ describe "CIDE::Build::Config::Loader" do
         "run" => ["a", "b"],
       },
       "forward_env" => ["PWD"],
+      "links" => [
+        {"name" => "redis", "image" => "redis2:foo", "env" => {"HOME" => "/"}, "run" => "redis-server"}
+      ],
       "export_dir" => "./artifacts",
       "run" => "do/something",
     }
@@ -50,7 +54,8 @@ describe "CIDE::Build::Config::Loader" do
     @loader.load(
       as_root: "xxxxx",
       before: :zzzzz,
-      forward_env: ["HOME", nil, "PWD"]
+      links: ["mysql", {image: "redis", env: {PATH: "/bin"}}, nil],
+      forward_env: ["HOME", nil, 555]
     )
 
     expect(@config.to_h.as_json).to eq(default_config.merge(
@@ -60,7 +65,11 @@ describe "CIDE::Build::Config::Loader" do
         "forward_env" => [],
         "run" => ["zzzzz"],
       },
-      "forward_env" => ["HOME", "PWD"],
+      "links" => [
+        {"name" => "mysql", "image" => "mysql", "run" => nil, "env" => {}},
+        {"name" => "redis", "image" => "redis", "run" => nil, "env" => {"PATH" => "/bin"}},
+      ],
+      "forward_env" => ["HOME", "555"],
     ))
   end
 
@@ -83,15 +92,17 @@ describe "CIDE::Build::Config::Loader" do
 
   it "reports type errors" do
     @loader.load(
-      as_root: ["aaa", 555],
+      as_root: ["aaa", Time.now],
       forward_env: {},
+      links: {},
     )
 
     expect(@config.to_h.as_json).to eq(default_config.merge(
       "as_root" => ["aaa", ""],
       "errors" => [
-        "expected as_root[1] to be a string but got a Fixnum",
+        "expected as_root[1] to be a string but got a Time",
         "expected forward_env to be a array of string, string or nil but got a Hash",
+        "expected links to be a expected hash to either declare the name or image but got a Hash",
       ]
     ))
   end

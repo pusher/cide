@@ -44,6 +44,8 @@ module CIDE
       default: '~/.ssh/id_rsa'
 
     def build
+      containers = []
+
       setup_docker
 
       ## Config ##
@@ -51,8 +53,10 @@ module CIDE
       exit 1 if build.nil?
       options.export_dir ||= build.export_dir
       build.run = options.run if options.run
-      tag = "cide/#{CIDE::Docker.id options.name}"
+      name = CIDE::Docker.id options.name
+      tag = "cide/#{name}"
 
+      ## Build ##
       if build.use_ssh
         unless File.exist?(options.ssh_key)
           fail ArgumentError, "SSH key #{options.ssh_key} not found"
@@ -61,28 +65,54 @@ module CIDE
         create_tmp_file SSH_CONFIG_FILE, File.read(SSH_CONFIG_PATH)
         create_tmp_file TEMP_SSH_KEY, File.read(build.ssh_key)
       end
-
-      say_status :build, build.to_h
-
       create_tmp_file DOCKERFILE, build.to_dockerfile
+      docker :build, '--force-rm', '--pull', '-f', DOCKERFILE, '-t', tag, '.'
 
-      docker :build, '--force-rm', '-f', DOCKERFILE, '-t', tag, '.'
+      ## CI ##
+      build.links.each do |link|
+        args = ['--detach']
+        link.env.each_pair do |key, value|
+          args.push('--env', [key, value].join('='))
+        end
+        args << link.image
+        args << link.run if link.run
+        link.id = docker(:run, *args, capture: true).strip
+        containers << link.id
+      end
 
+      run_options = ['--detach']
+
+      build.forward_env.each do |env|
+        run_options.push '--env', [env, ENV[env]].join('=')
+      end
+
+      build.links.each do |link|
+        run_options.push '--link', [link.id, link.name].join(':')
+      end
+
+      run_options.push tag
+      run_options.push build.run
+
+      id = docker(:run, *run_options, capture: true).strip
+      containers << id
+      docker(:attach, id)
+
+      ## Export ##
       return unless options.export
       fail 'export flag set but no export_dir given' if build.export_dir.nil?
 
-      id = docker(:run, '-d', tag, 'true', capture: true).strip
-      begin
-        guest_export_dir = File.expand_path(build.export_dir, CIDE_SRC_DIR)
-        host_export_dir  = File.expand_path(options.export_dir, Dir.pwd)
-
-        docker :cp, [id, guest_export_dir].join(':'), host_export_dir
-
-      ensure
-        docker :rm, '-f', id
-      end
+      guest_export_dir = File.expand_path(build.export_dir, CIDE_SRC_DIR)
+      host_export_dir  = File.expand_path(options.export_dir, Dir.pwd)
+      docker :cp, [id, guest_export_dir].join(':'), host_export_dir
     rescue Docker::Error => ex
       exit ex.exitstatus
+    ensure
+      # Shutdown old containers
+      unless containers.empty?
+        docker :rm, '--force', *containers.reverse,
+          verbose: false,
+          capture: true
+      end
     end
 
     desc 'clean', 'Removes old containers'
