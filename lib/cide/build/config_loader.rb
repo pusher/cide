@@ -148,7 +148,7 @@ module CIDE
       def expect_link(path, value)
         case value
         when String, Symbol, Integer then
-          load_link(path, name: value, image: value)
+          load_link(path, image: value)
         when Hash
           load_link(path, value)
         else
@@ -175,7 +175,7 @@ module CIDE
             unknown_key(path_)
           end
         end
-        link.name ||= link.image
+        link.name ||= link.image.split(':').first.split('/').last if link.image
         link.image ||= link.name
         if link.name.nil?
           type_error(

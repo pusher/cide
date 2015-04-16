@@ -68,7 +68,7 @@ describe "CIDE::Build::Config::Loader" do
       before: {
         add: {bin: 555}
       },
-      links: ["mysql", {image: "redis", env: {PATH: "/bin", TEST1: nil}}, nil],
+      links: ["mysql:5.6", {image: "redis", env: {PATH: "/bin", TEST1: nil}}, nil],
       env: ["LOL", nil, 555]
     )
 
@@ -80,7 +80,7 @@ describe "CIDE::Build::Config::Loader" do
         "run" => [],
       },
       "links" => [
-        {"name" => "mysql", "image" => "mysql", "env" => {}, "run" => nil},
+        {"name" => "mysql", "image" => "mysql:5.6", "env" => {}, "run" => nil},
         {"name" => "redis", "image" => "redis", "env" => {"PATH" => "/bin", "TEST1" => "test1"}, "run" => nil},
       ],
       "env" => {"LOL" => "zzz", "555" => "666"},
