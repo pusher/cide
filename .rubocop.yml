@@ -1,6 +1,7 @@
 AllCops:
   Exclude:
     - 'spec/**/*'
+    - 'vendor/**/*'
 
 # Rubocop is not smart enough
 Metrics/AbcSize:
