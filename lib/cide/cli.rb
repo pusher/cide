@@ -123,6 +123,67 @@ module CIDE
       end
     end
 
+    desc 'debug', 'Opens a debug console in the last project image'
+    method_option 'name',
+      desc: 'Name of the build',
+      aliases: %w(n t),
+      default: File.basename(Dir.pwd)
+    method_option 'user',
+      desc: 'User to run under',
+      default: 'cide'
+    def debug
+      containers = []
+
+      setup_docker
+
+      ## Config ##
+      banner 'Config'
+      build = Build::Config.load_file CONFIG_FILE
+      exit 1 if build.nil?
+      name = CIDE::Docker.id options.name
+      tag = "cide/#{name}"
+      say_status :config, build.inspect
+
+      ## CI ##
+      banner 'Run'
+      build.links.each do |link|
+        args = ['--detach']
+        link.env.each_pair do |key, value|
+          args.push('--env', [key, value].join('='))
+        end
+        args << link.image
+        args << link.run if link.run
+        link.id = docker(:run, *args, capture: true).strip
+        containers << link.id
+      end
+
+      run_options = ['--rm', '-t', '-i']
+
+      run_options.push '--user', options.user
+
+      build.env.each_pair do |key, value|
+        run_options.push '--env', [key, value].join('=')
+      end
+
+      build.links.each do |link|
+        run_options.push '--link', [link.id, link.name].join(':')
+      end
+
+      run_options.push tag
+      run_options.push 'bash'
+
+      docker(:run, *run_options)
+    rescue Docker::Error => ex
+      exit ex.exitstatus
+    ensure
+      # Shutdown old containers
+      unless containers.empty?
+        docker :rm, '--force', *containers.reverse,
+          verbose: false,
+          capture: true
+      end
+    end
+
     desc 'clean', 'Removes old containers'
     method_option 'days',
       desc: 'Number of days to keep the images',
