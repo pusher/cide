@@ -56,7 +56,7 @@ module CIDE
       attribute :env, Hash[String, String], default: {}
       attribute :export_dir, String, required: false
       attribute :links, Array[Link], default: []
-      attribute :run, String, default: 'script/ci'
+      attribute :run, Array[String], default: ['script/ci']
 
       attr_reader :warnings, :errors
 

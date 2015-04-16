@@ -41,7 +41,7 @@ module CIDE
             @config.links = expect_links(path, value)
           when 'run', 'command' then
             wanted_key(path, 'run', key)
-            @config.run = expect_string(path, value)
+            @config.run = expect_run(path, value)
           else
             unknown_key(path)
           end
@@ -282,6 +282,25 @@ module CIDE
           type_error(path, 'hash or array of keys or just a string', value)
         end
         hash
+      end
+
+      def expect_run(path, value)
+        array = []
+        has_error = false
+        case value
+        when Array
+          value.compact.each_with_index do |key, i|
+            array << expect_string(path.append(i), key)
+          end
+        when String, Symbol, Integer
+          array.push('sh', '-e', '-c', value.to_s)
+        when nil then
+        else
+          has_error = true
+          type_error(path, 'string or array of string', value)
+        end
+        error("#{path} shouldn't be empty") if array.empty? && !has_error
+        array
       end
     end
   end

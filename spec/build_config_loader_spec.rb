@@ -19,7 +19,7 @@ describe "CIDE::Build::Config::Loader" do
     "env" => {},
     "export_dir" => nil,
     "links" => [],
-    "run" => "script/ci",
+    "run" => ["script/ci"],
   }
 
   it "works - empty config" do
@@ -50,7 +50,7 @@ describe "CIDE::Build::Config::Loader" do
         {"name" => "redis", "image" => "redis2:foo", "env" => {"HOME" => "/"}, "run" => "redis-server"}
       ],
       "export_dir" => "./artifacts",
-      "run" => "do/something",
+      "run" => ["do/something"],
     }
 
     @loader.load(full_config)
@@ -69,7 +69,8 @@ describe "CIDE::Build::Config::Loader" do
         add: {bin: 555}
       },
       links: ["mysql:5.6", {image: "redis", env: {PATH: "/bin", TEST1: nil}}, nil],
-      env: ["LOL", nil, 555]
+      env: ["LOL", nil, 555],
+      run: "hello world",
     )
 
     expect(@config.to_h.as_json).to eq(default_config.merge(
@@ -84,6 +85,7 @@ describe "CIDE::Build::Config::Loader" do
         {"name" => "redis", "image" => "redis", "env" => {"PATH" => "/bin", "TEST1" => "test1"}, "run" => nil},
       ],
       "env" => {"LOL" => "zzz", "555" => "666"},
+      "run" => ["sh", "-e", "-c", "hello world"],
     ))
     expect(@config.warnings).to eq([])
     expect(@config.errors).to eq([])
@@ -99,7 +101,7 @@ describe "CIDE::Build::Config::Loader" do
     expect(@config.as_json).to eq(default_config.merge(
       "links" => [{"name" => "hoho", "image" => "hoho", "env" => {}, "run" => nil}],
       "from" => "foo",
-      "run" => "lol",
+      "run" => ["sh", "-e", "-c", "lol"],
     ))
     expect(@config.warnings).to eq([
       "link.from is deprecated. use 'image' instead.",

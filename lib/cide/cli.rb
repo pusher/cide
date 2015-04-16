@@ -35,8 +35,9 @@ module CIDE
 
     method_option 'run',
       desc: 'Override the script to run',
+      type: :array,
       aliases: ['r'],
-      default: nil
+      default: []
 
     method_option 'ssh_key',
       desc: 'Path to a ssh key to import into the docker image',
@@ -55,7 +56,7 @@ module CIDE
       export_dir = options.export_dir
       export_dir ||= File.dirname(build.export_dir) if build.export_dir
       ssh_key = File.expand_path(options.ssh_key)
-      build.run = options.run if options.run
+      build.run = options.run unless options.run.empty?
       name = CIDE::Docker.id options.name
       tag = "cide/#{name}"
       say_status :config, build.inspect
@@ -97,7 +98,7 @@ module CIDE
       end
 
       run_options.push tag
-      run_options.push build.run
+      run_options.push(*build.run)
 
       id = docker(:run, *run_options, capture: true).strip
       containers << id
