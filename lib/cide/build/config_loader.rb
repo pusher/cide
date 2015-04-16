@@ -32,8 +32,9 @@ module CIDE
             @config.use_ssh = expect_boolean(path, value)
           when 'before' then
             @config.before = maybe_step(path, value)
-          when 'forward_env' then
-            @config.forward_env = expect_array(path, value)
+          when 'env', 'forward_env' then
+            wanted_key(path, 'env', key)
+            @config.env = expect_env_hash(path, value)
           when 'export_dir' then
             @config.export_dir = maybe_string(path, value)
           when 'link', 'links' then
@@ -50,19 +51,25 @@ module CIDE
 
       protected
 
+      def warn(message)
+        @config.warnings << message
+      end
+
+      def error(message)
+        @config.errors << message
+      end
+
       def wanted_key(path, wanted_key, key)
         return if key == wanted_key
-        @config.warnings <<
-          "#{path} is deprecated. use '#{wanted_key}' instead."
+        warn "#{path} is deprecated. use '#{wanted_key}' instead."
       end
 
       def unknown_key(path)
-        @config.warnings << "Unknown key #{path}"
+        warn "Unknown key #{path}"
       end
 
       def type_error(path, wanted_type, value)
-        @config.errors <<
-          "expected #{path} to be a #{wanted_type} but got a #{value.class}"
+        error "expected #{path} to be a #{wanted_type} but got a #{value.class}"
       end
 
       def expect_string(path, value)
@@ -109,8 +116,9 @@ module CIDE
           case key
           when 'run' then
             step.run = expect_array(path_, value)
-          when 'forward_env' then
-            step.forward_env = expect_array(path_, value)
+          when 'env', 'forward_env' then
+            wanted_key(path_, 'env', key)
+            step.env = expect_env_hash(path_, value)
           when 'add' then
             step.add = expect_array(path_, value)
           else
@@ -160,7 +168,7 @@ module CIDE
             wanted_key(path_, 'image', key)
             link.image = expect_string(path_, value)
           when 'env' then
-            link.env = expect_env(path_, value)
+            link.env = expect_env_hash(path_, value)
           when 'run' then
             link.run = maybe_string(path_, value)
           else
@@ -209,18 +217,41 @@ module CIDE
         array.compact
       end
 
-      def expect_env(path, value)
+      def expect_env(path, key)
+        str = expect_string(path, key)
+        return nil if str == ''
+        value = ENV[str]
+        error "Missing environment variable #{key} in #{path}" if value.nil?
+        value
+      end
+
+      def expect_env_hash(path, value)
+        hash = {}
         case value
-        when Hash then
-          hash = {}
-          value.each_pair do |key, value_|
-            hash[key.to_s] = expect_string(path.append(key.to_s), value_)
+        when String, Symbol
+          key1 = value
+          value1 = expect_env(path, key1)
+          hash[key1] = value1 if value1
+        when Array then
+          value.compact.each_with_index do |key, i|
+            value_ = expect_env(path.append(i), key)
+            hash[key.to_s] = value_ if value_
           end
-          hash
+        when Hash then
+          value.each_pair do |key, value_|
+            key = key.to_s
+            path_ = path.append(key)
+            if value_.nil?
+              value_ = expect_env(path_, key)
+            else
+              value_ = expect_string(path_, value_)
+            end
+            hash[key.to_s] = value_ if value_
+          end
         else
-          type_error(path, 'hash', value)
-          {}
+          type_error(path, 'hash or array of keys or just a string', value)
         end
+        hash
       end
     end
   end

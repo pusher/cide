@@ -27,8 +27,8 @@ RUN chown -R cide:cide <%= CIDE_DIR %>
 # Before
 
 <% if before -%>
-  <% before.forward_env.each do |key| -%>
-ENV <%= key %> <%= ENV[key] %>
+  <% before.env.each_pair do |key, value| -%>
+ENV <%= key %> <%= value %>
   <% end %>
   <% before.add.each do |file| -%>
 ADD <%= file %> <%= File.expand_path(file, CIDE_SRC_DIR) %>

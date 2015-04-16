@@ -86,8 +86,8 @@ module CIDE
 
       run_options = ['--detach']
 
-      build.forward_env.each do |env|
-        run_options.push '--env', [env, ENV[env]].join('=')
+      build.env.each_pair do |key, value|
+        run_options.push '--env', [key, value].join('=')
       end
 
       build.links.each do |link|

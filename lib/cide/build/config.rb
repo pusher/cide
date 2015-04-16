@@ -25,7 +25,7 @@ module CIDE
         include Virtus.model(strict: true)
         include NiceInspect
         attribute :add, Array[String], default: []
-        attribute :forward_env, Array[String], default: []
+        attribute :env, Hash[String, String], default: {}
         attribute :run, Array[String], default: []
       end
 
@@ -34,7 +34,7 @@ module CIDE
         include NiceInspect
         attribute :name, String
         attribute :image, String
-        attribute :env, Hash[String, String]
+        attribute :env, Hash[String, String], default: {}
         attribute :run, String
         # Container ID added after the fact
         attr_accessor :id
@@ -46,7 +46,7 @@ module CIDE
       attribute :as_root, Array[String], default: []
       attribute :use_ssh, Boolean, default: false
       attribute :before, Step, required: false
-      attribute :forward_env, Array[String], default: []
+      attribute :env, Hash[String, String], default: {}
       attribute :export_dir, String, required: false
       attribute :links, Array[Link], default: []
       attribute :run, String, default: 'script/ci'

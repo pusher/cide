@@ -7,6 +7,8 @@ describe "CIDE::Build::Config::Loader" do
   before do
     @config = CIDE::Build::Config.new
     @loader = CIDE::Build::ConfigLoader.new(@config)
+    ENV['TEST1'] = 'test1'
+    ENV['TEST2'] = 'test2'
   end
 
   default_config = {
@@ -14,7 +16,7 @@ describe "CIDE::Build::Config::Loader" do
     "as_root" => [],
     "use_ssh" => false,
     "before" => nil,
-    "forward_env" => [],
+    "env" => {},
     "export_dir" => nil,
     "links" => [],
     "run" => "script/ci",
@@ -34,10 +36,10 @@ describe "CIDE::Build::Config::Loader" do
       "use_ssh" => true,
       "before" => {
         "add" => ["zzz", "yyy"],
-        "forward_env" => ["HOME"],
+        "env" => {"HOME" => "/"},
         "run" => ["a", "b"],
       },
-      "forward_env" => ["PWD"],
+      "env" => {"HOME" => "/"},
       "links" => [
         {"name" => "redis", "image" => "redis2:foo", "env" => {"HOME" => "/"}, "run" => "redis-server"}
       ],
@@ -53,25 +55,27 @@ describe "CIDE::Build::Config::Loader" do
   end
 
   it "coerces things around" do
+    ENV['LOL'] = 'zzz'
+    ENV['555'] = '666'
     @loader.load(
       as_root: "xxxxx",
       before: :zzzzz,
-      links: ["mysql", {image: "redis", env: {PATH: "/bin"}}, nil],
-      forward_env: ["HOME", nil, 555]
+      links: ["mysql", {image: "redis", env: {PATH: "/bin", TEST1: nil}}, nil],
+      env: ["LOL", nil, 555]
     )
 
     expect(@config.to_h.as_json).to eq(default_config.merge(
       "as_root" => ["xxxxx"],
       "before" => {
         "add" => [],
-        "forward_env" => [],
+        "env" => {},
         "run" => ["zzzzz"],
       },
       "links" => [
-        {"name" => "mysql", "image" => "mysql", "run" => nil, "env" => {}},
-        {"name" => "redis", "image" => "redis", "run" => nil, "env" => {"PATH" => "/bin"}},
+        {"name" => "mysql", "image" => "mysql", "env" => {}, "run" => nil},
+        {"name" => "redis", "image" => "redis", "env" => {"PATH" => "/bin", "TEST1" => "test1"}, "run" => nil},
       ],
-      "forward_env" => ["HOME", "555"],
+      "env" => {"LOL" => "zzz", "555" => "666"},
     ))
     expect(@config.warnings).to eq([])
     expect(@config.errors).to eq([])
@@ -98,7 +102,7 @@ describe "CIDE::Build::Config::Loader" do
   it "reports type errors" do
     @loader.load(
       as_root: ["aaa", Time.now],
-      forward_env: {},
+      env: Time.now,
       links: {},
     )
 
@@ -108,7 +112,7 @@ describe "CIDE::Build::Config::Loader" do
     expect(@config.warnings).to eq([])
     expect(@config.errors).to eq([
       "expected as_root[1] to be a string but got a Time",
-      "expected forward_env to be a array of string, string or nil but got a Hash",
+      "expected env to be a hash or array of keys or just a string but got a Time",
       "expected links to be a expected hash to either declare the name or image but got a Hash",
     ])
   end
