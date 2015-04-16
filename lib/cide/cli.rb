@@ -52,7 +52,9 @@ module CIDE
       banner 'Config'
       build = Build::Config.load_file CONFIG_FILE
       exit 1 if build.nil?
-      export_dir = options.export_dir || File.dirname(build.export_dir)
+      export_dir = options.export_dir
+      export_dir ||= File.dirname(build.export_dir) if build.export_dir
+      ssh_key = File.expand_path(options.ssh_key)
       build.run = options.run if options.run
       name = CIDE::Docker.id options.name
       tag = "cide/#{name}"
@@ -61,12 +63,12 @@ module CIDE
       ## Build ##
       banner 'Build'
       if build.use_ssh
-        unless File.exist?(options.ssh_key)
-          fail ArgumentError, "SSH key #{options.ssh_key} not found"
+        unless File.exist?(ssh_key)
+          fail ArgumentError, "SSH key #{ssh_key} not found"
         end
 
         create_tmp_file SSH_CONFIG_FILE, File.read(SSH_CONFIG_PATH)
-        create_tmp_file TEMP_SSH_KEY, File.read(build.ssh_key)
+        create_tmp_file TEMP_SSH_KEY, File.read(ssh_key)
       end
       create_tmp_file DOCKERFILE, build.to_dockerfile
       docker :build, '--force-rm', '--pull', '-f', DOCKERFILE, '-t', tag, '.'
