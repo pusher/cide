@@ -4,8 +4,16 @@ RUN useradd -m -U -d <%= CIDE_DIR %> cide
 
 # Install system build dependencies here
 
-<% as_root.each do |cmd| -%>
+<% if as_root -%>
+  <% as_root.add.each do |file| -%>
+ADD <%= file.src.join(' ') %> <%= file.dest %>
+  <% end -%>
+  <% as_root.env.each_pair do |key, value| -%>
+ENV <%= key %> <%= value %>
+  <% end -%>
+  <% as_root.run.each do |cmd| -%>
 RUN <%= cmd %>
+  <% end -%>
 <% end -%>
 
 # Common
@@ -14,6 +22,7 @@ ENV HOME <%= CIDE_DIR %>
 WORKDIR <%= CIDE_SRC_DIR %>
 
 # SSH config
+
 <% if use_ssh -%>
 ADD ssh_config <%= File.expand_path('config', CIDE_SSH_DIR) %>
 RUN chmod 400 <%= File.expand_path('config', CIDE_SSH_DIR) %>
@@ -22,24 +31,26 @@ ADD <%= TEMP_SSH_KEY %> <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
 RUN chmod 400 <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
 RUN chmod 755 <%= CIDE_SSH_DIR %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
-<% end %>
+<% end -%>
 
 # Before
 
 <% if before -%>
-  <% before.env.each_pair do |key, value| -%>
-ENV <%= key %> <%= value %>
-  <% end %>
   <% before.add.each do |file| -%>
 ADD <%= file.src.join(' ') %> <%= file.dest %>
   <% end %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
+  <% before.env.each_pair do |key, value| -%>
+ENV <%= key %> <%= value %>
+  <% end %>
 USER cide
-RUN <%= before.run %>
-USER root
+  <% before.run.each do |cmd| -%>
+RUN <%= cmd %>
+  <% end %>
 <% end -%>
 
 # Add project data
 
+USER root
 ADD . <%= CIDE_SRC_DIR %>
 RUN chown -R cide:cide <%= CIDE_DIR %>

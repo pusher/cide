@@ -13,7 +13,7 @@ describe "CIDE::Build::Config::Loader" do
 
   default_config = {
     "from" => "ubuntu",
-    "as_root" => [],
+    "as_root" => nil,
     "use_ssh" => false,
     "before" => nil,
     "env" => {},
@@ -32,7 +32,12 @@ describe "CIDE::Build::Config::Loader" do
   it "works2 - full config" do
     full_config = {
       "from" => "god",
-      "as_root" => ["one", "two"],
+      "as_root" => {
+        #"add" => [["http://df.ru", "zzz"], "yyy" => ["."]],
+        "add" => [],
+        "env" => {"HOME" => "/"},
+        "run" => ["one", "two"],
+      },
       "use_ssh" => true,
       "before" => {
         #"add" => [["http://df.ru", "zzz"], "yyy" => ["."]],
@@ -68,7 +73,7 @@ describe "CIDE::Build::Config::Loader" do
     )
 
     expect(@config.to_h.as_json).to eq(default_config.merge(
-      "as_root" => ["xxxxx"],
+      "as_root" => {"add" => [], "env" => {}, "run" => ["xxxxx"]},
       "before" => {
         "add" => [{"src" => ["555"], "dest" => "bin"}],
         "env" => {},
@@ -113,11 +118,11 @@ describe "CIDE::Build::Config::Loader" do
     )
 
     expect(@config.to_h.as_json).to eq(default_config.merge(
-      "as_root" => ["aaa", ""],
+      "as_root" => {"add" => [], "env" => {}, "run" => ["aaa", ""]}
     ))
     expect(@config.warnings).to eq([])
     expect(@config.errors).to eq([
-      "expected as_root[1] to be a string but got a Time",
+      "expected as_root.run[1] to be a string but got a Time",
       "expected env to be a hash or array of keys or just a string but got a Time",
       "expected links to be a expected hash to either declare the name or image but got a Hash",
     ])

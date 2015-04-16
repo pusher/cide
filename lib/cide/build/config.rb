@@ -50,7 +50,7 @@ module CIDE
       include Virtus.model(strict: true)
       include NiceInspect
       attribute :from, String, default: 'ubuntu'
-      attribute :as_root, Array[String], default: []
+      attribute :as_root, Step, required: false
       attribute :use_ssh, Boolean, default: false
       attribute :before, Step, required: false
       attribute :env, Hash[String, String], default: {}

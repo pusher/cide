@@ -27,7 +27,7 @@ module CIDE
             wanted_key(path, 'from', key)
             @config.from = expect_string(path, value)
           when 'as_root' then
-            @config.as_root = expect_array(path, value)
+            @config.as_root = maybe_step(path, value)
           when 'use_ssh' then
             @config.use_ssh = expect_boolean(path, value)
           when 'before' then
