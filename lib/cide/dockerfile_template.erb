@@ -31,7 +31,7 @@ RUN chown -R cide:cide <%= CIDE_DIR %>
 ENV <%= key %> <%= value %>
   <% end %>
   <% before.add.each do |file| -%>
-ADD <%= file %> <%= File.expand_path(file, CIDE_SRC_DIR) %>
+ADD <%= file.src.join(' ') %> <%= file.dest %>
   <% end %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
 USER cide

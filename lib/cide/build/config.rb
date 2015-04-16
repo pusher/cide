@@ -21,10 +21,17 @@ module CIDE
         end
       end
 
+      class FileAdd
+        include Virtus.model(strict: true)
+        include NiceInspect
+        attribute :src, Array[String], default: []
+        attribute :dest, String
+      end
+
       class Step
         include Virtus.model(strict: true)
         include NiceInspect
-        attribute :add, Array[String], default: []
+        attribute :add, Array[FileAdd], default: []
         attribute :env, Hash[String, String], default: {}
         attribute :run, Array[String], default: []
       end

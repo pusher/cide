@@ -84,7 +84,7 @@ module CIDE
 
       def maybe_string(path, value)
         case value
-        when String, Symbol
+        when String, Symbol, Integer
           value.to_s
         when nil
           nil
@@ -96,7 +96,7 @@ module CIDE
 
       def maybe_step(path, value)
         case value
-        when String, Symbol, Array then
+        when String, Symbol, Integer, Array then
           load_step(path, run: value)
         when Hash then
           load_step(path, value)
@@ -120,7 +120,7 @@ module CIDE
             wanted_key(path_, 'env', key)
             step.env = expect_env_hash(path_, value)
           when 'add' then
-            step.add = expect_array(path_, value)
+            step.add = expect_adds(path_, value)
           else
             unknown_key(path_)
           end
@@ -131,7 +131,7 @@ module CIDE
       def expect_links(path, value)
         array = []
         case value
-        when String, Symbol, Hash then
+        when String, Symbol, Integer, Hash then
           array << expect_link(path, value)
         when Array then
           value.compact.each_with_index do |value_, i|
@@ -147,7 +147,7 @@ module CIDE
 
       def expect_link(path, value)
         case value
-        when String, Symbol then
+        when String, Symbol, Integer then
           load_link(path, name: value, image: value)
         when Hash
           load_link(path, value)
@@ -207,7 +207,7 @@ module CIDE
           value.compact.each_with_index do |value_, i|
             array << expect_string(path.append(i), value_)
           end
-        when String, Symbol then
+        when String, Symbol, Integer then
           array << value.to_s
         when nil then
           # nothing to do
@@ -215,6 +215,36 @@ module CIDE
           type_error(path, 'array of string, string or nil', value)
         end
         array.compact
+      end
+
+      def expect_adds(path, value)
+        array = []
+        case value
+        when Array then
+          value.compact.each_with_index do |value_, i|
+            str = expect_string(path.append(i), value_)
+            array << load_add_str(str)
+          end
+        when Hash then
+          value.each_pair do |key_, value_|
+            src = expect_array(path.append(key_), value_)
+            array << Config::FileAdd.new(src: src, dest: key_.to_s)
+          end
+        when String, Symbol, Integer then
+          array << load_add_str(value.to_s)
+        when nil then
+          # nothing to do
+        else
+          type_error(path, 'arrays of string, hash, string or nil', value)
+        end
+        array.compact
+      end
+
+      def load_add_str(str)
+        Config::FileAdd.new(
+          src: [str],
+          dest: str,
+        )
       end
 
       def expect_env(path, key)
@@ -228,7 +258,7 @@ module CIDE
       def expect_env_hash(path, value)
         hash = {}
         case value
-        when String, Symbol
+        when String, Symbol, Integer
           key1 = value
           value1 = expect_env(path, key1)
           hash[key1] = value1 if value1

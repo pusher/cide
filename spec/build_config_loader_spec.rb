@@ -35,7 +35,8 @@ describe "CIDE::Build::Config::Loader" do
       "as_root" => ["one", "two"],
       "use_ssh" => true,
       "before" => {
-        "add" => ["zzz", "yyy"],
+        #"add" => [["http://df.ru", "zzz"], "yyy" => ["."]],
+        "add" => [],
         "env" => {"HOME" => "/"},
         "run" => ["a", "b"],
       },
@@ -59,7 +60,9 @@ describe "CIDE::Build::Config::Loader" do
     ENV['555'] = '666'
     @loader.load(
       as_root: "xxxxx",
-      before: :zzzzz,
+      before: {
+        add: {bin: 555}
+      },
       links: ["mysql", {image: "redis", env: {PATH: "/bin", TEST1: nil}}, nil],
       env: ["LOL", nil, 555]
     )
@@ -67,9 +70,9 @@ describe "CIDE::Build::Config::Loader" do
     expect(@config.to_h.as_json).to eq(default_config.merge(
       "as_root" => ["xxxxx"],
       "before" => {
-        "add" => [],
+        "add" => [{"src" => ["555"], "dest" => "bin"}],
         "env" => {},
-        "run" => ["zzzzz"],
+        "run" => [],
       },
       "links" => [
         {"name" => "mysql", "image" => "mysql", "env" => {}, "run" => nil},
@@ -83,15 +86,18 @@ describe "CIDE::Build::Config::Loader" do
 
   it "notifies deprecations" do
     @loader.load(
+      link: { from: "hoho" },
       image: "foo",
       command: "lol",
       zzz: 4,
     )
     expect(@config.as_json).to eq(default_config.merge(
+      "links" => [{"name" => "hoho", "image" => "hoho", "env" => {}, "run" => nil}],
       "from" => "foo",
       "run" => "lol",
     ))
     expect(@config.warnings).to eq([
+      "link.from is deprecated. use 'image' instead.",
       "image is deprecated. use 'from' instead.",
       "command is deprecated. use 'run' instead.",
       "Unknown key zzz",
