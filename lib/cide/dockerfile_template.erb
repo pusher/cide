@@ -54,3 +54,4 @@ RUN <%= cmd %>
 USER root
 ADD . <%= CIDE_SRC_DIR %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
+USER cide
