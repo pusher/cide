@@ -102,6 +102,8 @@ module CIDE
       containers << id
       docker(:attach, id)
 
+      say_status :status, 'SUCCESS', :green
+
       ## Export ##
       return unless options.export
       banner 'Export'
@@ -111,8 +113,29 @@ module CIDE
       host_export_dir  = File.expand_path(export_dir, Dir.pwd)
       docker :cp, [id, guest_export_dir].join(':'), host_export_dir
     rescue Docker::Error => ex
+      say_status :status, 'ERROR', :red
       exit ex.exitstatus
     ensure
+      linked_containers = containers - [id]
+      unless linked_containers.empty?
+        infos = docker(
+          :inspect,
+          *linked_containers,
+          capture: true,
+          verbose: false,
+        )
+        JSON.parse(infos).each do |info|
+          config = info['Config']
+          state = info['State']
+
+          next unless state['Dead'] || state['ExitCode'] > 0
+
+          $stderr.puts "=== Failed linked container #{info['Id']} ==="
+          $stderr.puts "Image: #{config['Image']}"
+          $stderr.puts "State: #{state.inspect}"
+          docker(:logs, '--tail', 20, info['Id'])
+        end
+      end
       # Shutdown old containers
       unless containers.empty?
         docker :rm, '--force', *containers.reverse,
