@@ -24,12 +24,12 @@ WORKDIR <%= CIDE_SRC_DIR %>
 # SSH config
 
 <% if use_ssh -%>
-ADD ssh_config <%= File.expand_path('config', CIDE_SSH_DIR) %>
-RUN chmod 400 <%= File.expand_path('config', CIDE_SSH_DIR) %>
+RUN mkdir <%= CIDE_SSH_DIR %>
+RUN echo StrictHostKeyChecking no > <%= File.join(CIDE_SSH_DIR, 'config') %>
+RUN chmod 400 <%= File.join(CIDE_SSH_DIR, 'config') %>
 
-ADD <%= TEMP_SSH_KEY %> <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
+ADD <%= TEMP_SSH_KEY %> <%= File.join(CIDE_SSH_DIR, 'id_rsa') %>
 RUN chmod 400 <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
-RUN chmod 755 <%= CIDE_SSH_DIR %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
 <% end -%>
 

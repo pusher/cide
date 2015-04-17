@@ -67,8 +67,6 @@ module CIDE
         unless File.exist?(ssh_key)
           fail ArgumentError, "SSH key #{ssh_key} not found"
         end
-
-        create_tmp_file SSH_CONFIG_FILE, File.read(SSH_CONFIG_PATH)
         create_tmp_file TEMP_SSH_KEY, File.read(ssh_key)
       end
       create_tmp_file DOCKERFILE, build.to_dockerfile
@@ -245,6 +243,8 @@ module CIDE
 
     def create_tmp_file(destination, *args, &block)
       create_file(destination, *args, &block)
+      # Dockerfile ADD compares content and mtime, we don't want that
+      File.utime(1_286_701_800, 1_286_701_800, destination)
       at_exit do
         remove_file(destination, verbose: false)
       end
