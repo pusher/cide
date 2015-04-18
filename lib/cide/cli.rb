@@ -5,6 +5,7 @@ require 'cide/build'
 require 'thor'
 
 require 'json'
+require 'securerandom'
 require 'time'
 
 module CIDE
@@ -95,11 +96,14 @@ module CIDE
         run_options.push '--link', [link.id, link.name].join(':')
       end
 
+      id = SecureRandom.hex
+      run_options.push '--name', id
+
       run_options.push tag
       run_options.push(*build.run)
 
-      id = docker(:run, *run_options, capture: true).strip
       containers << id
+      docker(:run, *run_options, capture: true).strip
       docker(:attach, id)
 
       say_status :status, 'SUCCESS', :green
