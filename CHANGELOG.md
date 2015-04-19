@@ -1,4 +1,21 @@
 
+0.4.0 / 2015-04-19
+==================
+
+  * NEW: Allow for arbitrary env on multiple levels
+  * NEW: Better link image to name coercion. `foo/bar:tag` will now get a `bar` name.
+  * NEW: Error reporting of broken linked containers
+  * NEW: More control over the `add` directive. It's now possible to set the target path.
+  * NEW: The `as_root` key is now a build step making it possible to set environment and add files.
+  * NEW: `cide build --no-pull`
+  * NEW: `cide debug` command to debug builds
+  * CHANGE: Force cleaning of old images
+  * FIX: Work around issue #7
+  * FIX: caching issues with ssh keys
+  * FIX: cide was using the wrong user to run the ci script
+  * FIX: export_dir and ssh_key command-line options
+  * FIX: running commands with arguments
+
 0.2.0 / 2015-04-15
 ==================
 

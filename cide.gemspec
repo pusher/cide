@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name          = 'cide'
-  s.version       = '0.2.0'
+  s.version       = '0.4.0'
   s.authors       = ['zimbatm']
   s.email         = ['zimbatm@zimbatm.com']
   s.summary       = 'CI docker runner'
@@ -20,8 +20,8 @@ DESC
 
   s.required_ruby_version = '>= 1.9.3'
 
-  s.add_runtime_dependency 'thor', '~> 0.19.0'
-  s.add_runtime_dependency 'virtus', '~> 1.0.0'
+  s.add_runtime_dependency 'thor', '~> 0.19'
+  s.add_runtime_dependency 'virtus', '~> 1.0'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rubocop'
   s.add_development_dependency 'rspec'
