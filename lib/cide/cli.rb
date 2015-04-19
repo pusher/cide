@@ -40,6 +40,11 @@ module CIDE
       aliases: ['r'],
       default: []
 
+    method_option 'pull',
+      desc: 'Whenever to pull for new images on build',
+      type: :boolean,
+      default: true
+
     method_option 'ssh_key',
       desc: 'Path to a ssh key to import into the docker image',
       aliases: ['s'],
@@ -71,7 +76,12 @@ module CIDE
         create_tmp_file TEMP_SSH_KEY, File.read(ssh_key)
       end
       create_tmp_file DOCKERFILE, build.to_dockerfile
-      docker :build, '--force-rm', '--pull', '-f', DOCKERFILE, '-t', tag, '.'
+      build_options = ['--force-rm']
+      build_options << '--pull' if options.pull
+      build_options.push '-f', DOCKERFILE
+      build_options.push '-t', tag
+      build_options << '.'
+      docker :build, *build_options
 
       ## CI ##
       banner 'Run'
