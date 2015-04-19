@@ -257,7 +257,7 @@ module CIDE
         return
       end
 
-      docker('rmi', *old_cide_images)
+      docker('rmi', '--force', *old_cide_images)
     end
 
     desc 'init', "Creates a blank #{CONFIG_FILE} into the project"
