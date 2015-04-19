@@ -7,6 +7,6 @@ before:
     - Gemfile
     - Gemfile.lock
     - cide.gemspec
-  run: bundle
+  run: bundle install --jobs=3 --retry=3 --deployment
 use_ssh: false
-run: rake
+run: bundle exec rake

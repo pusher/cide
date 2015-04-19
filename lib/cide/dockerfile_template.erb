@@ -4,8 +4,16 @@ RUN useradd -m -U -d <%= CIDE_DIR %> cide
 
 # Install system build dependencies here
 
-<% as_root.each do |cmd| -%>
+<% if as_root -%>
+  <% as_root.add.each do |file| -%>
+ADD <%= file.src.join(' ') %> <%= file.dest %>
+  <% end -%>
+  <% as_root.env.each_pair do |key, value| -%>
+ENV <%= key %> <%= value %>
+  <% end -%>
+  <% as_root.run.each do |cmd| -%>
 RUN <%= cmd %>
+  <% end -%>
 <% end -%>
 
 # Common
@@ -14,32 +22,36 @@ ENV HOME <%= CIDE_DIR %>
 WORKDIR <%= CIDE_SRC_DIR %>
 
 # SSH config
-<% if use_ssh -%>
-ADD ssh_config <%= File.expand_path('config', CIDE_SSH_DIR) %>
-RUN chmod 400 <%= File.expand_path('config', CIDE_SSH_DIR) %>
 
-ADD <%= TEMP_SSH_KEY %> <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
+<% if use_ssh -%>
+RUN mkdir <%= CIDE_SSH_DIR %>
+RUN echo StrictHostKeyChecking no > <%= File.join(CIDE_SSH_DIR, 'config') %>
+RUN chmod 400 <%= File.join(CIDE_SSH_DIR, 'config') %>
+
+ADD <%= TEMP_SSH_KEY %> <%= File.join(CIDE_SSH_DIR, 'id_rsa') %>
 RUN chmod 400 <%= File.expand_path('id_rsa', CIDE_SSH_DIR) %>
-RUN chmod 755 <%= CIDE_SSH_DIR %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
-<% end %>
+<% end -%>
 
 # Before
 
 <% if before -%>
-  <% before.forward_env.each do |key| -%>
-ENV <%= key %> <%= ENV[key] %>
-  <% end %>
   <% before.add.each do |file| -%>
-ADD <%= file %> <%= File.expand_path(file, CIDE_SRC_DIR) %>
+ADD <%= file.src.join(' ') %> <%= file.dest %>
   <% end %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
+  <% before.env.each_pair do |key, value| -%>
+ENV <%= key %> <%= value %>
+  <% end %>
 USER cide
-RUN <%= before.run %>
-USER root
+  <% before.run.each do |cmd| -%>
+RUN <%= cmd %>
+  <% end %>
 <% end -%>
 
 # Add project data
 
+USER root
 ADD . <%= CIDE_SRC_DIR %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
+USER cide

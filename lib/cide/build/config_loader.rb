@@ -27,20 +27,21 @@ module CIDE
             wanted_key(path, 'from', key)
             @config.from = expect_string(path, value)
           when 'as_root' then
-            @config.as_root = expect_array(path, value)
+            @config.as_root = maybe_step(path, value)
           when 'use_ssh' then
             @config.use_ssh = expect_boolean(path, value)
           when 'before' then
             @config.before = maybe_step(path, value)
-          when 'forward_env' then
-            @config.forward_env = expect_array(path, value)
+          when 'env', 'forward_env' then
+            wanted_key(path, 'env', key)
+            @config.env = expect_env_hash(path, value)
           when 'export_dir' then
             @config.export_dir = maybe_string(path, value)
           when 'link', 'links' then
             @config.links = expect_links(path, value)
           when 'run', 'command' then
             wanted_key(path, 'run', key)
-            @config.run = expect_string(path, value)
+            @config.run = expect_run(path, value)
           else
             unknown_key(path)
           end
@@ -50,19 +51,25 @@ module CIDE
 
       protected
 
+      def warn(message)
+        @config.warnings << message
+      end
+
+      def error(message)
+        @config.errors << message
+      end
+
       def wanted_key(path, wanted_key, key)
         return if key == wanted_key
-        @config.warnings <<
-          "#{path} is deprecated. use '#{wanted_key}' instead."
+        warn "#{path} is deprecated. use '#{wanted_key}' instead."
       end
 
       def unknown_key(path)
-        @config.warnings << "Unknown key #{path}"
+        warn "Unknown key #{path}"
       end
 
       def type_error(path, wanted_type, value)
-        @config.errors <<
-          "expected #{path} to be a #{wanted_type} but got a #{value.class}"
+        error "expected #{path} to be a #{wanted_type} but got a #{value.class}"
       end
 
       def expect_string(path, value)
@@ -77,7 +84,7 @@ module CIDE
 
       def maybe_string(path, value)
         case value
-        when String, Symbol
+        when String, Symbol, Integer
           value.to_s
         when nil
           nil
@@ -89,7 +96,7 @@ module CIDE
 
       def maybe_step(path, value)
         case value
-        when String, Symbol, Array then
+        when String, Symbol, Integer, Array then
           load_step(path, run: value)
         when Hash then
           load_step(path, value)
@@ -109,10 +116,11 @@ module CIDE
           case key
           when 'run' then
             step.run = expect_array(path_, value)
-          when 'forward_env' then
-            step.forward_env = expect_array(path_, value)
+          when 'env', 'forward_env' then
+            wanted_key(path_, 'env', key)
+            step.env = expect_env_hash(path_, value)
           when 'add' then
-            step.add = expect_array(path_, value)
+            step.add = expect_adds(path_, value)
           else
             unknown_key(path_)
           end
@@ -123,7 +131,7 @@ module CIDE
       def expect_links(path, value)
         array = []
         case value
-        when String, Symbol, Hash then
+        when String, Symbol, Integer, Hash then
           array << expect_link(path, value)
         when Array then
           value.compact.each_with_index do |value_, i|
@@ -139,8 +147,8 @@ module CIDE
 
       def expect_link(path, value)
         case value
-        when String, Symbol then
-          load_link(path, name: value, image: value)
+        when String, Symbol, Integer then
+          load_link(path, image: value)
         when Hash
           load_link(path, value)
         else
@@ -160,14 +168,14 @@ module CIDE
             wanted_key(path_, 'image', key)
             link.image = expect_string(path_, value)
           when 'env' then
-            link.env = expect_env(path_, value)
+            link.env = expect_env_hash(path_, value)
           when 'run' then
             link.run = maybe_string(path_, value)
           else
             unknown_key(path_)
           end
         end
-        link.name ||= link.image
+        link.name ||= link.image.split(':').first.split('/').last if link.image
         link.image ||= link.name
         if link.name.nil?
           type_error(
@@ -199,7 +207,7 @@ module CIDE
           value.compact.each_with_index do |value_, i|
             array << expect_string(path.append(i), value_)
           end
-        when String, Symbol then
+        when String, Symbol, Integer then
           array << value.to_s
         when nil then
           # nothing to do
@@ -209,18 +217,90 @@ module CIDE
         array.compact
       end
 
-      def expect_env(path, value)
+      def expect_adds(path, value)
+        array = []
         case value
-        when Hash then
-          hash = {}
-          value.each_pair do |key, value_|
-            hash[key.to_s] = expect_string(path.append(key.to_s), value_)
+        when Array then
+          value.compact.each_with_index do |value_, i|
+            str = expect_string(path.append(i), value_)
+            array << load_add_str(str)
           end
-          hash
+        when Hash then
+          value.each_pair do |key_, value_|
+            src = expect_array(path.append(key_), value_)
+            array << Config::FileAdd.new(src: src, dest: key_.to_s)
+          end
+        when String, Symbol, Integer then
+          array << load_add_str(value.to_s)
+        when nil then
+          # nothing to do
         else
-          type_error(path, 'hash', value)
-          {}
+          type_error(path, 'arrays of string, hash, string or nil', value)
         end
+        array.compact
+      end
+
+      def load_add_str(str)
+        Config::FileAdd.new(
+          src: [str],
+          dest: str,
+        )
+      end
+
+      def expect_env(path, key)
+        str = expect_string(path, key)
+        return nil if str == ''
+        value = ENV[str]
+        error "Missing environment variable #{key} in #{path}" if value.nil?
+        value
+      end
+
+      def expect_env_hash(path, value)
+        hash = {}
+        case value
+        when String, Symbol, Integer
+          key1 = value
+          value1 = expect_env(path, key1)
+          hash[key1] = value1 if value1
+        when Array then
+          value.compact.each_with_index do |key, i|
+            value_ = expect_env(path.append(i), key)
+            hash[key.to_s] = value_ if value_
+          end
+        when Hash then
+          value.each_pair do |key, value_|
+            key = key.to_s
+            path_ = path.append(key)
+            if value_.nil?
+              value_ = expect_env(path_, key)
+            else
+              value_ = expect_string(path_, value_)
+            end
+            hash[key.to_s] = value_ if value_
+          end
+        else
+          type_error(path, 'hash or array of keys or just a string', value)
+        end
+        hash
+      end
+
+      def expect_run(path, value)
+        array = []
+        has_error = false
+        case value
+        when Array
+          value.compact.each_with_index do |key, i|
+            array << expect_string(path.append(i), key)
+          end
+        when String, Symbol, Integer
+          array.push('sh', '-e', '-c', value.to_s)
+        when nil then
+        else
+          has_error = true
+          type_error(path, 'string or array of string', value)
+        end
+        error("#{path} shouldn't be empty") if array.empty? && !has_error
+        array
       end
     end
   end

@@ -5,6 +5,7 @@ require 'cide/build'
 require 'thor'
 
 require 'json'
+require 'securerandom'
 require 'time'
 
 module CIDE
@@ -35,8 +36,14 @@ module CIDE
 
     method_option 'run',
       desc: 'Override the script to run',
+      type: :array,
       aliases: ['r'],
-      default: nil
+      default: []
+
+    method_option 'pull',
+      desc: 'Whenever to pull for new images on build',
+      type: :boolean,
+      default: true
 
     method_option 'ssh_key',
       desc: 'Path to a ssh key to import into the docker image',
@@ -52,8 +59,10 @@ module CIDE
       banner 'Config'
       build = Build::Config.load_file CONFIG_FILE
       exit 1 if build.nil?
-      export_dir = options.export_dir || File.dirname(build.export_dir)
-      build.run = options.run if options.run
+      export_dir = options.export_dir
+      export_dir ||= File.dirname(build.export_dir) if build.export_dir
+      ssh_key = File.expand_path(options.ssh_key)
+      build.run = options.run unless options.run.empty?
       name = CIDE::Docker.id options.name
       tag = "cide/#{name}"
       say_status :config, build.inspect
@@ -61,15 +70,18 @@ module CIDE
       ## Build ##
       banner 'Build'
       if build.use_ssh
-        unless File.exist?(options.ssh_key)
-          fail ArgumentError, "SSH key #{options.ssh_key} not found"
+        unless File.exist?(ssh_key)
+          fail ArgumentError, "SSH key #{ssh_key} not found"
         end
-
-        create_tmp_file SSH_CONFIG_FILE, File.read(SSH_CONFIG_PATH)
-        create_tmp_file TEMP_SSH_KEY, File.read(build.ssh_key)
+        create_tmp_file TEMP_SSH_KEY, File.read(ssh_key)
       end
       create_tmp_file DOCKERFILE, build.to_dockerfile
-      docker :build, '--force-rm', '--pull', '-f', DOCKERFILE, '-t', tag, '.'
+      build_options = ['--force-rm']
+      build_options << '--pull' if options.pull
+      build_options.push '-f', DOCKERFILE
+      build_options.push '-t', tag
+      build_options << '.'
+      docker :build, *build_options
 
       ## CI ##
       banner 'Run'
@@ -86,20 +98,25 @@ module CIDE
 
       run_options = ['--detach']
 
-      build.forward_env.each do |env|
-        run_options.push '--env', [env, ENV[env]].join('=')
+      build.env.each_pair do |key, value|
+        run_options.push '--env', [key, value].join('=')
       end
 
       build.links.each do |link|
         run_options.push '--link', [link.id, link.name].join(':')
       end
 
-      run_options.push tag
-      run_options.push build.run
+      id = SecureRandom.hex
+      run_options.push '--name', id
 
-      id = docker(:run, *run_options, capture: true).strip
+      run_options.push tag
+      run_options.push(*build.run)
+
       containers << id
+      docker(:run, *run_options, capture: true).strip
       docker(:attach, id)
+
+      say_status :status, 'SUCCESS', :green
 
       ## Export ##
       return unless options.export
@@ -109,6 +126,88 @@ module CIDE
       guest_export_dir = File.expand_path(build.export_dir, CIDE_SRC_DIR)
       host_export_dir  = File.expand_path(export_dir, Dir.pwd)
       docker :cp, [id, guest_export_dir].join(':'), host_export_dir
+    rescue Docker::Error => ex
+      say_status :status, 'ERROR', :red
+      exit ex.exitstatus
+    ensure
+      linked_containers = containers - [id]
+      unless linked_containers.empty?
+        infos = docker(
+          :inspect,
+          *linked_containers,
+          capture: true,
+          verbose: false,
+        )
+        JSON.parse(infos).each do |info|
+          config = info['Config']
+          state = info['State']
+
+          next unless state['Dead'] || state['ExitCode'] > 0
+
+          $stderr.puts "=== Failed linked container #{info['Id']} ==="
+          $stderr.puts "Image: #{config['Image']}"
+          $stderr.puts "State: #{state.inspect}"
+          docker(:logs, '--tail', 20, info['Id'])
+        end
+      end
+      # Shutdown old containers
+      unless containers.empty?
+        docker :rm, '--force', *containers.reverse,
+          verbose: false,
+          capture: true
+      end
+    end
+
+    desc 'debug', 'Opens a debug console in the last project image'
+    method_option 'name',
+      desc: 'Name of the build',
+      aliases: %w(n t),
+      default: File.basename(Dir.pwd)
+    method_option 'user',
+      desc: 'User to run under',
+      default: 'cide'
+    def debug
+      containers = []
+
+      setup_docker
+
+      ## Config ##
+      banner 'Config'
+      build = Build::Config.load_file CONFIG_FILE
+      exit 1 if build.nil?
+      name = CIDE::Docker.id options.name
+      tag = "cide/#{name}"
+      say_status :config, build.inspect
+
+      ## CI ##
+      banner 'Run'
+      build.links.each do |link|
+        args = ['--detach']
+        link.env.each_pair do |key, value|
+          args.push('--env', [key, value].join('='))
+        end
+        args << link.image
+        args << link.run if link.run
+        link.id = docker(:run, *args, capture: true).strip
+        containers << link.id
+      end
+
+      run_options = ['--rm', '-t', '-i']
+
+      run_options.push '--user', options.user
+
+      build.env.each_pair do |key, value|
+        run_options.push '--env', [key, value].join('=')
+      end
+
+      build.links.each do |link|
+        run_options.push '--link', [link.id, link.name].join(':')
+      end
+
+      run_options.push tag
+      run_options.push 'bash'
+
+      docker(:run, *run_options)
     rescue Docker::Error => ex
       exit ex.exitstatus
     ensure
@@ -168,7 +267,7 @@ module CIDE
         return
       end
 
-      docker('rmi', *old_cide_images)
+      docker('rmi', '--force', *old_cide_images)
     end
 
     desc 'init', "Creates a blank #{CONFIG_FILE} into the project"
@@ -181,6 +280,8 @@ module CIDE
 
     def create_tmp_file(destination, *args, &block)
       create_file(destination, *args, &block)
+      # Dockerfile ADD compares content and mtime, we don't want that
+      File.utime(1_286_701_800, 1_286_701_800, destination)
       at_exit do
         remove_file(destination, verbose: false)
       end

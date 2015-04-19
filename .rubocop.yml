@@ -1,24 +1,25 @@
 AllCops:
   Exclude:
     - 'spec/**/*'
+    - 'vendor/**/*'
 
 # Rubocop is not smart enough
 Metrics/AbcSize:
-  Max: 100
+  Enabled: false
 
 # CIDE::CLI is essentially a big dispatcher, no need to break it
 # in smaller chunks.
 Metrics/ClassLength:
-  Max: 200
+  Enabled: false
 
 # Offense count: 28
 Metrics/CyclomaticComplexity:
-  Max: 15
+  Enabled: false
 
 # CIDE::CLI methods can be read top to bottom. No need to factor out
 # functionality unless it can be shared.
 Metrics/MethodLength:
-  Max: 60
+  Enabled: false
 
 Metrics/PerceivedComplexity:
   Max: 20
