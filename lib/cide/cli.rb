@@ -152,7 +152,7 @@ module CIDE
       end
       # Shutdown old containers
       unless containers.empty?
-        docker :rm, '--force', *containers.reverse,
+        docker :rm, '--force', '--volumes', *containers.reverse,
           verbose: false,
           capture: true
       end
@@ -213,7 +213,7 @@ module CIDE
     ensure
       # Shutdown old containers
       unless containers.empty?
-        docker :rm, '--force', *containers.reverse,
+        docker :rm, '--force', '--volumes', *containers.reverse,
           verbose: false,
           capture: true
       end
