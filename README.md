@@ -5,17 +5,17 @@
 environment. It solves a problem where Jenkins workers need all the project's
 dependencies (possibly conflicting) to be installed on the boxes. With *cide*
 each run gets it's own set of temporary docker containers which are scratched
-at the end. Incidentally it's also possible to the the same `cide` command on
-the developer machine and get the same build environent as on the CI. This
-makes configuration iterations much shorter and allow to converge on a working
-configuration faster.
+at the end. Incidentally it's also possible to run the same `cide` command on
+the developer machine and get the same build environment as on the CI. This
+makes configuration iterations much shorter and allows to converge on a
+working configuration faster.
 
 Usage
 -----
 
 Go to the target project's root and run `cide init` to populate a default
 `.cide.yml`. This file contains all the instruction to build your project with
-cide.
+cide and is [documented here](docs/cide.yml.md).
 
 Once the file is configure run `cide` to execute the build. All the output
 will appear in the console.
@@ -55,6 +55,7 @@ Missing features
   current format might be a bit daunting for non-experts.
 * Build matrix: run variations of the tests, for example with different
   versions of ruby to make sure all are supported (useful for libraries).
+* Support for local docker machine
 
 PR welcome !
 
@@ -89,8 +90,6 @@ Similar projects
 TODO
 ----
 
-* Document the `.cide.yml` format. Look into `lib/cide/build/config_loader.rb`
-  for now
 * Explain how to use *cide* with Jenkins
 * Explain Travis CI vs *cide* + Jenkins
 
