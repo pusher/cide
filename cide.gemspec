@@ -5,10 +5,11 @@ Gem::Specification.new do |s|
   s.version       = '0.4.1'
   s.authors       = ['zimbatm']
   s.email         = ['zimbatm@zimbatm.com']
-  s.summary       = 'CI docker runner'
+  s.summary       = 'Isolated test runner with Docker'
   s.description   = <<DESC
-cide makes it easy to reproduce CI builds on the developer computer by
-providing the same docker environment.
+cide is a command-line tool that runs tests in an isolated (docker)
+environment. It allows to run the same command on the developer and CI
+machines.
 DESC
   s.homepage      = 'https://github.com/zimbatm/cide'
   s.license       = 'MIT'

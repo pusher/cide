@@ -1,5 +1,5 @@
-*cide* - Continuous Integration Docker Environment
-================================================
+*cide* - Isolated test runner with Docker
+=========================================
 
 *cide* is a command-line tool that runs tests in an isolated (docker)
 environment. It solves a problem where Jenkins workers need all the project's
