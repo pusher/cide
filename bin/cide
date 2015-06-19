@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 #
-# cide - Continuous Integration Docker Environment
+# cide - Isolated test runner with Docker
 #
 
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
-require 'cide'
+require 'cide/cli'
 CIDE::CLI.start
