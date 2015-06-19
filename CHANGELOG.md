@@ -1,4 +1,10 @@
 
+0.5.0 / 2015-06-19
+==================
+
+  * NEW: man pages and doc !
+  * CHANGE: config file is `cide.yml` instead of `.cide.yml`
+
 0.4.1 / 2015-06-02
 ==================
 
