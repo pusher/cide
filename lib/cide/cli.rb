@@ -21,7 +21,7 @@ module CIDE
 
     method_option 'name',
       desc: 'Name of the build',
-      aliases: %w(n t),
+      aliases: %w(-n -t),
       default: File.basename(Dir.pwd)
 
     method_option 'export',
@@ -31,13 +31,13 @@ module CIDE
 
     method_option 'export_dir',
       desc: 'Change the ouput directory on the host',
-      aliases: %w(o host_export_dir),
+      aliases: %w(-o --host_export_dir),
       default: nil
 
     method_option 'run',
       desc: 'Override the script to run',
       type: :array,
-      aliases: ['r'],
+      aliases: ['-r'],
       default: []
 
     method_option 'pull',
@@ -47,7 +47,7 @@ module CIDE
 
     method_option 'ssh_key',
       desc: 'Path to a ssh key to import into the docker image',
-      aliases: ['s'],
+      aliases: ['-s'],
       default: '~/.ssh/id_rsa'
 
     def build
@@ -161,7 +161,7 @@ module CIDE
     desc 'debug', 'Opens a debug console in the last project image'
     method_option 'name',
       desc: 'Name of the build',
-      aliases: %w(n t),
+      aliases: %w(-n -t),
       default: File.basename(Dir.pwd)
     method_option 'user',
       desc: 'User to run under',
