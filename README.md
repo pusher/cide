@@ -14,7 +14,7 @@ Usage
 -----
 
 Go to the target project's root and run `cide init` to populate a default
-`.cide.yml`. This file contains all the instruction to build your project with
+`cide.yml`. This file contains all the instruction to build your project with
 cide and is [documented here](docs/cide.yml.md).
 
 Once the file is configure run `cide` to execute the build. All the output
@@ -23,7 +23,7 @@ will appear in the console.
 Example
 -------
 
-`.cide.yml`
+`cide.yml`
 ```yaml
 ---
 from: "ruby:2.1"

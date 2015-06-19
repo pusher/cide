@@ -57,7 +57,7 @@ module CIDE
 
       ## Config ##
       banner 'Config'
-      build = Build::Config.load_file CONFIG_FILE
+      build = Build::Config.load(Dir.pwd)
       exit 1 if build.nil?
       export_dir = options.export_dir
       export_dir ||= File.dirname(build.export_dir) if build.export_dir
@@ -173,7 +173,7 @@ module CIDE
 
       ## Config ##
       banner 'Config'
-      build = Build::Config.load_file CONFIG_FILE
+      build = Build::Config.load
       exit 1 if build.nil?
       name = CIDE::Docker.id options.name
       tag = "cide/#{name}"
@@ -270,10 +270,10 @@ module CIDE
       docker('rmi', '--force', *old_cide_images)
     end
 
-    desc 'init', "Creates a blank #{CONFIG_FILE} into the project"
+    desc 'init', "Creates a blank #{CONFIG_FILES.first} into the project"
     def init
-      puts "Creating #{CONFIG_FILE} with default values"
-      create_file CONFIG_FILE, File.read(DEFAULT_CIDEFILE)
+      puts "Creating #{CONFIG_FILES.first} with default values"
+      create_file CONFIG_FILES.first, File.read(DEFAULT_CIDEFILE)
     end
 
     private

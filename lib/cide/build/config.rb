@@ -70,6 +70,11 @@ module CIDE
         ERB.new(File.read(DOCKERFILE_TEMPLATE), nil, '<>-').result(binding)
       end
 
+      def self.load(dir = Dir.pwd, output = $stderr)
+        file_path = find_config(dir)
+        load_file(file_path, output)
+      end
+
       def self.load_file(file_path, output = $stderr)
         obj = new
         loader = ConfigLoader.new(obj)
@@ -85,6 +90,13 @@ module CIDE
 
         return obj if obj.errors.empty?
         nil
+      end
+
+      def self.find_config(dir)
+        paths = CONFIG_FILES.map { |name| File.expand_path(name, dir) }
+        paths
+          .find { |path| File.exist?(path) } ||
+          fail("Config not found among these paths: #{paths.inspect}")
       end
     end
   end

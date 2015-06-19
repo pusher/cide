@@ -1,6 +1,7 @@
-# Documentation for the .cide.yml file
+# Documentation for the `cide.yml` file
 
-The `.cide.yml` file is encoded in the [YAML markup language](http://yaml.org/) and describes mostly how the Dockerfile will be generated.
+The `cide.yml` file is encoded in the [YAML markup language](http://yaml.org/)
+and describes mostly how the Dockerfile will be generated.
 
 It has the following semantic:
 
