@@ -16,8 +16,8 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-This is the default command that does most of the work and is invoked 99% of
-the command.
+This is the default command that does most of the work and is invoked most of
+the time.
 
 When invoked it will read the `cide.yml` file, generate a temporary
 `Dockerfile.cide` file, build it with *docker build*, start all the linked
@@ -40,7 +40,7 @@ OPTIONS
 
 `-o`, `--export-dir`=<*path*>
   By default the export directory is the same as the one given in the
-  `export:` directive in the `cide.yml` file. It's possible to change that
+  `export:` directive in the `cide.yml` file. It is possible to change that
   target folder outside of the container.
 
 `-r`, `--run`=<*command*>

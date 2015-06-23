@@ -14,7 +14,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-Sometimes it's useful to run commands inside of the same environment where the
+Sometimes it is useful to run commands inside of the same environment where the
 CI tests are run from. For example if an error doesn't reproduce on the
 developer's machine.
 
@@ -33,7 +33,7 @@ OPTIONS
 
 `--user`=<*username*>
   Selects the user to run the container under. By default the `cide` user is
-  selected. In some situations it's useful to run the container as `root`
+  selected. In some situations it is useful to run the container as `root`
   (when poking at system dependencies)
 
 SEE ALSO

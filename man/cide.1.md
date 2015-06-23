@@ -20,7 +20,7 @@ DESCRIPTION
 container (through Docker).
 
 The default *cide build* command reads a `.cide.yml` file in the current
-folder and takes it's content to build a temporary Dockerfile that imports all
+folder and takes its content to build a temporary Dockerfile that imports all
 of the current directory's structure, builds an image with it and then runs a
 container from it that executes the specified tests. See the cide.yml(1) man
 page for the structure of that file.
@@ -65,7 +65,7 @@ COMMANDS
   Shows the general help or the one for the given *command*
 
 *cide init*
-  Creates a blank `cide.yml` file into the project.
+  Creates a blank `cide.yml` file in the project.
 
   See cide-init(1)
 

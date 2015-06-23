@@ -108,7 +108,7 @@ ENV definition
 
 An array or hash of environment variables to load
 
-In the hash for, the left-hand side is the key and the right-hand side the
+In the hash form, the left-hand side is the key and the right-hand side the
 value.
 
 If a hash value is nil or the array form is used, the environment variables

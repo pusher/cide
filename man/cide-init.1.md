@@ -4,7 +4,7 @@ CIDE-INIT 1 "JUNE 2015" cide-init "Cide Manual"
 NAME
 ----
 
-cide-init - Creates a blank `cide.yml` into the project
+cide-init - Creates a blank `cide.yml` in the project
 
 SYNOPSIS
 --------
@@ -14,7 +14,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-It's useful to get a basic skeleton when adding *cide* to a new project.  If
+It is useful to get a basic skeleton when adding *cide* to a new project.  If
 the file already exists a confirmation is asked.
 
 FILES

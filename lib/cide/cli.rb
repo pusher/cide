@@ -270,7 +270,7 @@ module CIDE
       docker('rmi', '--force', *old_cide_images)
     end
 
-    desc 'init', "Creates a blank #{CONFIG_FILES.first} into the project"
+    desc 'init', "Creates a blank #{CONFIG_FILES.first} in the project"
     def init
       puts "Creating #{CONFIG_FILES.first} with default values"
       create_file CONFIG_FILES.first, File.read(DEFAULT_CIDEFILE)

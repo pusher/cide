@@ -4,8 +4,8 @@
 *cide* is a command-line tool that runs tests in an isolated (docker)
 environment. It solves a problem where Jenkins workers need all the project's
 dependencies (possibly conflicting) to be installed on the boxes. With *cide*
-each run gets it's own set of temporary docker containers which are scratched
-at the end. Incidentally it's also possible to run the same `cide` command on
+each run gets its own set of temporary docker containers which are scratched
+at the end. Incidentally it is also possible to run the same `cide` command on
 the developer machine and get the same build environment as on the CI. This
 makes configuration iterations much shorter and allows to converge on a
 working configuration faster.
@@ -17,7 +17,7 @@ Go to the target project's root and run `cide init` to populate a default
 `cide.yml`. This file contains all the instruction to build your project with
 cide and is [documented here](docs/cide.yml.md).
 
-Once the file is configure run `cide` to execute the build. All the output
+Once the file is configured run `cide` to execute the build. All the output
 will appear in the console.
 
 Example
