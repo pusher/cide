@@ -11,7 +11,7 @@ cide is a command-line tool that runs tests in an isolated (docker)
 environment. It allows to run the same command on the developer and CI
 machines.
 DESC
-  s.homepage      = 'https://github.com/zimbatm/cide'
+  s.homepage      = 'https://zimbatm.github.io/cide'
   s.license       = 'MIT'
 
   s.executables   = ['cide']
