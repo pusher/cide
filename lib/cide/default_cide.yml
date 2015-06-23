@@ -1,9 +1,33 @@
 ---
-# See https://github.com/zimbatm/cide
+# See http://zimbatm.github.io/cide/#man/cide.yml.1 for more documentation
+
+# Docker image to base the build on. Find images at http://index.docker.io/
 from: ubuntu
-as_root: []
-forward_env: []
-before:
+
+# Commands run as root
+as_root:
+#  add: []
+#  env: {}
+#  run: []
+
+# Whenever to inject ssh keys into the project
 use_ssh: false
+
+# Commands run as "cide", used for caching build depedencies
+before:
+#  add: []
+#  env: {}
+#  run: []
+
+# Folder path who contains artifacts to export
 export_dir:
+
+# Linked-containers to run along the tests
+links:
+# - { from: 'redis:2.6', run: 'redis-server' }
+
+# Sets additional environment variables
+env: {}
+
+# Main script to run
 run: script/ci
