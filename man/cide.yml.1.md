@@ -19,7 +19,7 @@ Root document
 
 ```yaml
 ---
-# Image to base the build on
+# Image to base the build on. Find images at http://index.docker.io/
 #
 # required
 # type: string
@@ -142,7 +142,7 @@ name: 'mysql'
 # Name of the image to pull and base the container on.
 #
 # type: string
-name: 'redis:2.6'
+from: 'redis:2.6'
 
 # Environment variables for that container. See the ENV definition.
 env: {}
