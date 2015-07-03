@@ -1,4 +1,10 @@
 
+0.6.0 / 2015-07-03
+==================
+
+  * CHANGE: Remove the runtime options. --force, --skip, ... are not available anymore
+  * FIX: Doc fixes and updates
+
 0.5.0 / 2015-06-19
 ==================
 
