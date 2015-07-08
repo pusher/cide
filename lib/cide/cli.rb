@@ -225,7 +225,7 @@ module CIDE
       type: :numeric
     method_option 'count',
       desc: 'Maximum number of images to keep',
-      default: 10,
+      default: 20,
       type: :numeric
     def clean
       setup_docker
@@ -238,7 +238,7 @@ module CIDE
       iter.next
       cide_image_ids = iter
         .map { |line| line.split(/\s+/) }
-        .select { |line| line[0] =~ %r{^cide/} || line[0] == '<none>' }
+        .select { |line| line[0] =~ %r{^cide[/-]} || line[0] == '<none>' }
         .map { |line| line[2] }
 
       if cide_image_ids.empty?
