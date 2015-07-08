@@ -1,4 +1,10 @@
 
+0.6.1 / 2015-07-08
+==================
+
+  * FIX: cleaning wasn't removing all the expected images
+  * CHANGE: clean is keeping the last 20 images (vs. 10 before)
+
 0.6.0 / 2015-07-03
 ==================
 
