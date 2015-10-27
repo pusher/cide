@@ -46,10 +46,19 @@ module CIDE
         end
 
         # Check docker version
-        unless `docker version 2>/dev/null` =~ /Client version: ([^\s]+)/
+        docker_version = nil
+        case `docker version 2>/dev/null`
+        when /Client version: ([^\s]+)/
+          docker_version = $1
+        when /\s+Version:\s+([^\s]+)/
+          docker_version = $1
+        else
           fail VersionError, 'Unknown docker version'
         end
-        fail VersionError, "Docker version #{$1} too old" if $1 < '1.5.0'
+
+        if docker_version < '1.5.0'
+          fail VersionError, "Docker version #{$1} too old"
+        end
 
         true
       )
