@@ -24,7 +24,7 @@ export_dir:
 
 # Linked-containers to run along the tests
 links:
-# - { from: 'redis:2.6', run: 'redis-server' }
+# - { image: 'redis:2.6', run: 'redis-server' }
 
 # Sets additional environment variables
 env: {}
