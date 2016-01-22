@@ -15,7 +15,7 @@ Usage
 
 Go to the target project's root and run `cide init` to populate a default
 `cide.yml`. This file contains all the instruction to build your project with
-cide and is [documented here](docs/cide.yml.md).
+cide.
 
 Once the file is configured run `cide` to execute the build. All the output
 will appear in the console.
@@ -36,6 +36,8 @@ before:
   run: bundle install --jobs=3 --retry=3 --deployment
 run: bundle exec rspec
 ```
+
+See [the cide.yml man page](man/cide.yml.1.md) for the full documentation.
 
 Features
 --------
