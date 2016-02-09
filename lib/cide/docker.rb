@@ -56,7 +56,7 @@ module CIDE
           fail VersionError, 'Unknown docker version'
         end
 
-        if docker_version < '1.5.0'
+        if Gem::Version.new(docker_version) < Gem::Version.new('1.5.0')
           fail VersionError, "Docker version #{$1} too old"
         end
 
