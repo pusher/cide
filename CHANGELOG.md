@@ -1,4 +1,10 @@
 
+0.7.0 / 2016-02-10
+==================
+
+  * NEW: --guest_export_dir to override the path on guest machine
+  * CHANGE/FIX: --run now takes a string instead of an array
+
 0.6.3 / 2015-02-09
 ==================
 
