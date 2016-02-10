@@ -33,9 +33,14 @@ module CIDE
       aliases: %w(-o --host_export_dir),
       default: nil
 
+    method_option 'guest_export_dir',
+      desc: 'Change the ouput directory on the host',
+      aliases: %w(-i),
+      default: nil
+
     method_option 'run',
       desc: 'Override the script to run',
-      type: :array,
+      type: :string,
       aliases: ['-r'],
       default: []
 
@@ -58,10 +63,8 @@ module CIDE
       banner 'Config'
       build = Build::Config.load(Dir.pwd)
       exit 1 if build.nil?
-      export_dir = options.export_dir
-      export_dir ||= File.dirname(build.export_dir) if build.export_dir
       ssh_key = File.expand_path(options.ssh_key)
-      build.run = options.run unless options.run.empty?
+      build.run = ['sh', '-e', '-c', options.run] unless options.run.empty?
       name = CIDE::Docker.id options.name
       tag = "cide/#{name}"
       say_status :config, build.inspect
@@ -120,10 +123,17 @@ module CIDE
       ## Export ##
       return unless options.export
       banner 'Export'
-      fail 'export flag set but no export_dir given' if build.export_dir.nil?
 
-      guest_export_dir = File.expand_path(build.export_dir, CIDE_SRC_DIR)
-      host_export_dir  = File.expand_path(export_dir, Dir.pwd)
+      source_export_dir = options.guest_export_dir || build.export_dir
+      fail 'export flag set but no export_dir given' if source_export_dir.nil?
+
+      target_export_dir = options.export_dir || source_export_dir
+
+      target_export_dir = File.dirname(target_export_dir)
+
+      guest_export_dir = File.expand_path(source_export_dir, CIDE_SRC_DIR)
+      host_export_dir  = File.expand_path(target_export_dir, Dir.pwd)
+
       docker :cp, [id, guest_export_dir].join(':'), host_export_dir
     rescue Docker::Error => ex
       say_status :status, 'ERROR', :red
