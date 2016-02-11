@@ -69,7 +69,7 @@ module CIDE
       ERB.new(File.read(DOCKERFILE_TEMPLATE), nil, '<>-').result(binding)
     end
 
-    def self.load(dir = Dir.pwd, output = $stderr)
+    def self.load(dir, output = $stderr)
       file_path = find_config(dir)
       load_file(file_path, output)
     end
