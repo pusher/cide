@@ -1,6 +1,6 @@
 require 'cide/constants'
 require 'cide/docker'
-require 'cide/build'
+require 'cide/config_file_loader'
 
 require 'thor'
 
@@ -61,7 +61,7 @@ module CIDE
 
       ## Config ##
       banner 'Config'
-      build = Build::Config.load(Dir.pwd)
+      build = ConfigFile.load(Dir.pwd)
       exit 1 if build.nil?
       ssh_key = File.expand_path(options.ssh_key)
       build.run = ['sh', '-e', '-c', options.run] unless options.run.empty?
@@ -182,7 +182,7 @@ module CIDE
 
       ## Config ##
       banner 'Config'
-      build = Build::Config.load
+      build = ConfigFile.load
       exit 1 if build.nil?
       name = CIDE::Docker.id options.name
       tag = "cide/#{name}"
