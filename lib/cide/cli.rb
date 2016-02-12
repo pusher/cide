@@ -16,9 +16,9 @@ module CIDE
     include CIDE::Docker
     include Thor::Actions
 
-    default_command 'build'
+    default_command 'exec'
 
-    desc 'build', 'Builds an image and executes the run script'
+    desc 'exec', 'Builds an image and executes the run script'
 
     method_option 'name',
       desc: 'Name of the build',
@@ -56,7 +56,7 @@ module CIDE
       aliases: ['-s'],
       default: '~/.ssh/id_rsa'
 
-    def build
+    def exec
       setup_docker
 
       tag = "cide/#{CIDE::Docker.id options.name}"
