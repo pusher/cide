@@ -68,10 +68,12 @@ module CIDE
 
     def cleanup!(output: $stderr)
       return if @containers.empty?
-      report_containers!(output)
-    ensure
-      # Shutdown old containers
-      docker :rm, '--force', '--volumes', *@containers.reverse, capture: true
+      begin
+        report_containers!(output)
+      ensure
+        # Shutdown old containers
+        docker :rm, '--force', '--volumes', *@containers.reverse, capture: true
+      end
     end
 
     protected

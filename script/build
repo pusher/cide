@@ -1,0 +1,14 @@
+#!/bin/bash -e
+
+if [[ -z $1 ]]; then
+  echo "Missing <TARGET>" >&2
+  exit 1
+fi
+
+TARGET=$1
+
+cp -r $PWD $TARGET
+cd $TARGET
+bundle install --standalone --binstubs=binstubs --without=development test
+mkdir -p .packager/bin
+ln -s ../../binstubs/cide .packager/bin/cide

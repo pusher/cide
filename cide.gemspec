@@ -22,7 +22,8 @@ DESC
   s.required_ruby_version = '>= 1.9.3'
 
   s.add_runtime_dependency 'thor', '~> 0.19'
-  s.add_runtime_dependency 'virtus', '~> 1.0'
+  s.add_runtime_dependency 'virtus', '~> 1'
+  s.add_runtime_dependency 'aws-sdk', '~> 2'
   s.add_development_dependency 'activesupport'
   s.add_development_dependency 'md2man'
   s.add_development_dependency 'rake'
