@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name          = 'cide'
-  s.version       = '0.7.0'
+  s.version       = '0.8.0'
   s.authors       = ['zimbatm']
   s.email         = ['zimbatm@zimbatm.com']
   s.summary       = 'Isolated test runner with Docker'

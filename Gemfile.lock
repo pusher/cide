@@ -1,9 +1,9 @@
 PATH
   remote: .
   specs:
-    cide (0.7.0)
+    cide (0.8.0)
       thor (~> 0.19)
-      virtus (~> 1)
+      virtus (~> 1.0)
 
 GEM
   remote: https://rubygems.org/

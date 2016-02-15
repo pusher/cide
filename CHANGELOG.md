@@ -1,4 +1,10 @@
 
+0.8.0 / 2016-02-15
+==================
+
+  * NEW: `cide package` command to build archives from a project
+  * CHANGE: Renamed `cide build` to `cide exec`
+
 0.7.0 / 2016-02-10
 ==================
 
