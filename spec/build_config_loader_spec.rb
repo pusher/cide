@@ -1,12 +1,12 @@
-require "cide/build"
+require "cide/config_file"
 require "stringio"
 require "ostruct"
 require "active_support/json"
 
-describe "CIDE::Build::Config::Loader" do
+describe "CIDE::ConfigFile::Loader" do
   before do
-    @config = CIDE::Build::Config.new
-    @loader = CIDE::Build::ConfigLoader.new(@config)
+    @config = CIDE::ConfigFile.new
+    @loader = CIDE::ConfigFileLoader.new(@config)
     ENV['TEST1'] = 'test1'
     ENV['TEST2'] = 'test2'
   end

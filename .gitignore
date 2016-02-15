@@ -1,4 +1,5 @@
 *.gem
+.packager-*
 man/*.1
 man/*.css
 man/*.html

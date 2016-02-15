@@ -1,6 +1,8 @@
+require 'cide/builder'
+require 'cide/config_file'
 require 'cide/constants'
 require 'cide/docker'
-require 'cide/build'
+require 'cide/runner'
 
 require 'thor'
 
@@ -14,12 +16,12 @@ module CIDE
     include CIDE::Docker
     include Thor::Actions
 
-    default_command 'build'
+    default_command 'exec'
 
-    desc 'build', 'Builds an image and executes the run script'
+    desc 'exec', 'Builds an image and executes the run script'
 
     method_option 'name',
-      desc: 'Name of the build',
+      desc: 'Name of the image',
       aliases: %w(-n -t),
       default: File.basename(Dir.pwd)
 
@@ -42,7 +44,7 @@ module CIDE
       desc: 'Override the script to run',
       type: :string,
       aliases: ['-r'],
-      default: []
+      default: nil
 
     method_option 'pull',
       desc: 'Whenever to pull for new images on build',
@@ -54,117 +56,153 @@ module CIDE
       aliases: ['-s'],
       default: '~/.ssh/id_rsa'
 
-    def build
-      containers = []
-
+    def exec
       setup_docker
 
-      ## Config ##
+      tag = name_to_tag options.name
+
       banner 'Config'
-      build = Build::Config.load(Dir.pwd)
-      exit 1 if build.nil?
-      ssh_key = File.expand_path(options.ssh_key)
-      build.run = ['sh', '-e', '-c', options.run] unless options.run.empty?
-      name = CIDE::Docker.id options.name
-      tag = "cide/#{name}"
-      say_status :config, build.inspect
+      config = ConfigFile.load(Dir.pwd)
+      say_status :config, config.inspect
 
       ## Build ##
       banner 'Build'
-      if build.use_ssh
-        unless File.exist?(ssh_key)
-          fail ArgumentError, "SSH key #{ssh_key} not found"
-        end
-        create_tmp_file TEMP_SSH_KEY, File.read(ssh_key)
-      end
-      create_tmp_file DOCKERFILE, build.to_dockerfile
-      build_options = ['--force-rm']
-      build_options << '--pull' if options.pull
-      build_options.push '-f', DOCKERFILE
-      build_options.push '-t', tag
-      build_options << '.'
-      docker :build, *build_options
+      builder = Builder.new(config)
+      builder.build(
+        pull: options.pull,
+        ssh_key: File.expand_path(options.ssh_key),
+        tag: tag,
+      )
 
-      ## CI ##
+      ## Run ##
       banner 'Run'
-      build.links.each do |link|
-        args = ['--detach']
-        link.env.each_pair do |key, value|
-          args.push('--env', [key, value].join('='))
-        end
-        args << link.image
-        args << link.run if link.run
-        link.id = docker(:run, *args, capture: true).strip
-        containers << link.id
-      end
 
-      run_options = ['--detach']
+      command = options.run ? ['sh', '-e', '-c', options.run] : config.run
 
-      build.env.each_pair do |key, value|
-        run_options.push '--env', [key, value].join('=')
-      end
-
-      build.links.each do |link|
-        run_options.push '--link', [link.id, link.name].join(':')
-      end
-
-      id = SecureRandom.hex
-      run_options.push '--name', id
-
-      run_options.push tag
-      run_options.push(*build.run)
-
-      containers << id
-      docker(:run, *run_options, capture: true).strip
-      docker(:attach, id)
-
-      say_status :status, 'SUCCESS', :green
+      runner = Runner.new(
+        command: command,
+        env: config.env,
+        links: config.links,
+        tag: tag,
+      )
+      runner.run!
 
       ## Export ##
       return unless options.export
       banner 'Export'
-
-      source_export_dir = options.guest_export_dir || build.export_dir
-      fail 'export flag set but no export_dir given' if source_export_dir.nil?
-
-      target_export_dir = options.export_dir || source_export_dir
-
-      target_export_dir = File.dirname(target_export_dir)
-
-      guest_export_dir = File.expand_path(source_export_dir, CIDE_SRC_DIR)
-      host_export_dir  = File.expand_path(target_export_dir, Dir.pwd)
-
-      docker :cp, [id, guest_export_dir].join(':'), host_export_dir
+      runner.export!(
+        guest_dir: options.guest_export_dir || config.export_dir,
+        host_dir: options.export_dir || config.export_dir,
+      )
     rescue Docker::Error => ex
-      say_status :status, 'ERROR', :red
       exit ex.exitstatus
+    rescue RuntimeError => ex
+      $stderr.puts ex.to_s
+      exit 1
     ensure
-      linked_containers = containers - [id]
-      unless linked_containers.empty?
-        infos = docker(
-          :inspect,
-          *linked_containers,
-          capture: true,
-          verbose: false,
-        )
-        JSON.parse(infos).each do |info|
-          config = info['Config']
-          state = info['State']
+      runner.cleanup! if runner
+    end
 
-          next unless state['Dead'] || state['ExitCode'] > 0
+    desc 'package', 'Builds a package from the container script/build'
+    method_option 'name',
+      desc: 'Name of the image',
+      aliases: %w(-n -t),
+      default: File.basename(Dir.pwd)
 
-          $stderr.puts "=== Failed linked container #{info['Id']} ==="
-          $stderr.puts "Image: #{config['Image']}"
-          $stderr.puts "State: #{state.inspect}"
-          docker(:logs, '--tail', 20, info['Id'])
-        end
-      end
-      # Shutdown old containers
-      unless containers.empty?
-        docker :rm, '--force', '--volumes', *containers.reverse,
-          verbose: false,
-          capture: true
-      end
+    method_option 'ssh_key',
+      desc: 'Path to a ssh key to import into the docker image',
+      aliases: ['-s'],
+      default: '~/.ssh/id_rsa'
+
+    method_option 'package',
+      desc: 'Name of the package',
+      default: File.basename(Dir.pwd)
+
+    method_option 'upload',
+      desc: 'Whenever to upload the result to S3',
+      type: :boolean,
+      default: true
+
+    method_option 'set-version',
+      desc: 'Tells cide the package version, otherwise extracted from git',
+      default: nil
+
+    # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY need to be passed trough the
+    # env or ~/.aws/credentials file
+    method_option 'aws_bucket',
+      desc: 'AWS_BUCKET',
+      default: ENV['AWS_BUCKET']
+
+    def package
+      fail 'missing AWS_BUCKET' if options.upload && !options.aws_bucket
+
+      tag = name_to_tag options.name
+
+      build_root = File.expand_path(".packager-#{Time.now.to_i}")
+      guest_export_dir = '/cide/package'
+      host_export_dir  = File.join(build_root, 'package')
+
+      version = options.version || (
+        git_branch = `git symbolic-ref --short -q HEAD || echo unknown`.strip
+        git_rev = `git rev-parse --short HEAD`.strip
+        "#{git_branch}-#{git_rev}"
+      )
+
+      timestamp = Time.now.strftime('%Y-%m-%d_%H%M%S')
+      tar_name = "#{options.package}.#{timestamp}.#{version}.tar.gz"
+      tar_path = File.join(build_root, tar_name)
+
+      banner 'Config'
+      config = ConfigFile.load(Dir.pwd)
+      say_status :config, config.inspect
+
+      ## Build ##
+      banner 'Build'
+      builder = Builder.new(config)
+      builder.build(
+        pull: options.pull,
+        ssh_key: File.expand_path(options.ssh_key),
+        tag: tag,
+      )
+
+      ## Run ##
+      banner 'Run'
+      runner = Runner.new(
+        command: ['script/build', guest_export_dir],
+        env: config.env,
+        links: config.links,
+        tag: tag,
+      )
+      runner.run!
+
+      ## Export ##
+      banner 'Export'
+      runner.export!(
+        guest_dir: guest_export_dir,
+        host_dir: host_export_dir,
+      )
+
+      # Create archive
+      system('tar', '-czf', tar_path, '-C', host_export_dir, '.')
+
+      ## Upload ##
+
+      return unless options.upload
+      banner 'Upload'
+
+      require 'aws-sdk'
+      s3 = Aws::S3::Client.new
+      s3.bucket(options.aws_bucket).object(tar_name).upload_file(tar_path)
+
+    rescue Docker::Error => ex
+      exit ex.exitstatus
+    rescue RuntimeError => ex
+      $stderr.puts ex.to_s
+      exit 1
+    ensure
+      FileUtils.rm_rf(host_export_dir) if options.upload
+
+      runner.cleanup! if runner
     end
 
     desc 'debug', 'Opens a debug console in the last project image'
@@ -176,56 +214,33 @@ module CIDE
       desc: 'User to run under',
       default: 'cide'
     def debug
-      containers = []
-
       setup_docker
+
+      tag = name_to_tag options.name
 
       ## Config ##
       banner 'Config'
-      build = Build::Config.load
-      exit 1 if build.nil?
-      name = CIDE::Docker.id options.name
-      tag = "cide/#{name}"
-      say_status :config, build.inspect
+      config = ConfigFile.load(Dir.pwd)
+      say_status :config, config.inspect
 
-      ## CI ##
+      ## Run ##
       banner 'Run'
-      build.links.each do |link|
-        args = ['--detach']
-        link.env.each_pair do |key, value|
-          args.push('--env', [key, value].join('='))
-        end
-        args << link.image
-        args << link.run if link.run
-        link.id = docker(:run, *args, capture: true).strip
-        containers << link.id
-      end
+      runner = Runner.new(
+        command: ['bash'],
+        env: config.env,
+        links: config.links,
+        tag: tag,
+        user: options.user,
+      )
+      runner.run!(interactive: true)
 
-      run_options = ['--rm', '-t', '-i']
-
-      run_options.push '--user', options.user
-
-      build.env.each_pair do |key, value|
-        run_options.push '--env', [key, value].join('=')
-      end
-
-      build.links.each do |link|
-        run_options.push '--link', [link.id, link.name].join(':')
-      end
-
-      run_options.push tag
-      run_options.push 'bash'
-
-      docker(:run, *run_options)
     rescue Docker::Error => ex
       exit ex.exitstatus
+    rescue RuntimeError => ex
+      $stderr.puts ex.to_s
+      exit 1
     ensure
-      # Shutdown old containers
-      unless containers.empty?
-        docker :rm, '--force', '--volumes', *containers.reverse,
-          verbose: false,
-          capture: true
-      end
+      runner.cleanup! if runner
     end
 
     desc 'clean', 'Removes old containers'
@@ -287,18 +302,16 @@ module CIDE
 
     private
 
-    def create_tmp_file(destination, *args, &block)
-      create_file(destination, *args, &block)
-      # Dockerfile ADD compares content and mtime, we don't want that
-      File.utime(1_286_701_800, 1_286_701_800, destination)
-      at_exit do
-        remove_file(destination, verbose: false)
-      end
+    # Prefixes the tag to make it recognizable by the cleaner
+    # Makes sure it's a valid tag
+    def name_to_tag(name)
+      "cide/#{CIDE::Docker.id name}"
     end
 
-    LINE_SIZE = 78.0
+    LINE_WIDTH = 78.0
     def banner(text)
-      pad = (LINE_SIZE - text.size - 4) / 2
+      pad = (LINE_WIDTH - text.size - 4) / 2
+      pad = 0 if pad < 0
       puts '=' * pad.floor + "[ #{text} ]" + '=' * pad.ceil
     end
   end

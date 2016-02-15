@@ -4,7 +4,7 @@ CIDE.YML 1 "JUNE 2015" cide.yml "Cide Manual"
 NAME
 ----
 
-cide.yml - file format that directs the `cide build` execution
+cide.yml - file format that directs the `cide exec` execution
 
 DESCRIPTION
 -----------
