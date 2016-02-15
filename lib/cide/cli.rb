@@ -142,6 +142,8 @@ module CIDE
       guest_export_dir = '/cide/package'
       host_export_dir  = File.join(build_root, 'package')
 
+      FileUtils.rm_rf(build_root)
+
       version = options.version || (
         git_branch = `git symbolic-ref --short -q HEAD || echo unknown`.strip
         git_rev = `git rev-parse --short HEAD`.strip
@@ -177,8 +179,6 @@ module CIDE
 
       ## Export ##
       banner 'Export'
-
-      FileUtils.rm_rf(build_root)
 
       runner.export!(
         guest_dir: guest_export_dir,
