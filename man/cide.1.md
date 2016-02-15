@@ -25,6 +25,9 @@ of the current directory's structure, builds an image with it and then runs a
 container from it that executes the specified tests. See the cide.yml(1) man
 page for the structure of that file.
 
+Cide can also be used to package and upload projects after they have been
+built. See cide-package(1) for more information.
+
 OPTIONS
 -------
 
@@ -45,11 +48,18 @@ These are global options that set the behavior of all commands.
 COMMANDS
 --------
 
-*cide build* [<*options*>]
+*cide exec* [<*options*>]
   Builds an image and executes the run script. This is the default command
   when none is provided.
 
-  See cide-build(1)
+  See cide-package(1)
+
+*cide package* [<*options*>]
+  Packages a directory that resulting from a run script. Can also upload the
+  package to Amazon s3.
+
+  See cide-package(1)
+
 
 *cide clean* [<*options*>]
   Removes old containers.
@@ -90,6 +100,22 @@ https://docs.docker.com/docker/reference/commandline/cli/#environment-variables:
 
 *DOCKER_TLS_VERIFY*
   When set Docker uses TLS and verifies the remote.
+
+
+The following environment variables are used by the Amazon `s3` SDK to
+authenticate, and should be set by the user. See also
+http://docs.aws.amazon.com/sdkforruby/api/index.html.
+
+*AWS_ACCESS_KEY_ID*
+*AWS_SECRET_ACCESS_KEY*
+  The Amazon key id and access key (see
+  http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html)
+
+*AWS_REGION*
+  The Amazon region (e.g. `us-east-1`)
+
+*AWS_BUCKET*
+  Your bucket's name
 
 CONTRIBUTE
 ----------
