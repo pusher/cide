@@ -1,4 +1,10 @@
 
+0.8.1 / 2016-02-15
+==================
+
+  * FIX: cide package --set-version
+  * Make sure the build root is not imported into the next build
+
 0.8.0 / 2016-02-15
 ==================
 
