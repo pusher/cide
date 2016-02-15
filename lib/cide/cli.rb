@@ -123,7 +123,7 @@ module CIDE
       type: :boolean,
       default: true
 
-    method_option 'set-version',
+    method_option 'set_version',
       desc: 'Tells cide the package version, otherwise extracted from git',
       default: nil
 
@@ -144,7 +144,7 @@ module CIDE
 
       FileUtils.rm_rf(build_root)
 
-      version = options.version || (
+      version = options.set_version || (
         git_branch = `git symbolic-ref --short -q HEAD || echo unknown`.strip
         git_rev = `git rev-parse --short HEAD`.strip
         "#{git_branch}-#{git_rev}"
