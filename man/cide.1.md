@@ -106,11 +106,16 @@ The following environment variables are used by the Amazon `s3` SDK to
 authenticate, and should be set by the user. See also
 http://docs.aws.amazon.com/sdkforruby/api/index.html.
 
-*S3_USER*
-  The Amazon s3 username
+*AWS_ACCESS_KEY_ID*
+*AWS_SECRET_ACCESS_KEY*
+  The Amazon key id and access key (see
+  http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html)
 
-*S3 PASS*
-  The amazon s3 pass
+*AWS_REGION*
+  The Amazon region (e.g. `us-east-1`)
+
+*AWS_BUCKET*
+  Your bucket's name
 
 CONTRIBUTE
 ----------
