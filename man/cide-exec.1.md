@@ -1,16 +1,16 @@
-CIDE-BUILD 1 "JUNE 2015" cide-build "Cide Manual"
-=================================================
+CIDE-EXEC 1 "FEBRUARY 2016" cide-exec "Cide Manual"
+===================================================
 
 NAME
 ----
 
-cide-build - Builds an image and executes the run script
+cide-exec - Builds an image and executes the run script
 
 SYNOPSIS
 --------
 
-*cide build* [`-n`|`--name`=<*name*>] [`--export`|`--no-export`]
-             [`-o`|`--export-dir`=<*path*>] [`-r`|`--run`=<*command*>]
+*cide exec*  [`--export`|`--no-export`] [`-o`|`--export-dir`=<*path*>]
+             [`--guest_export_dir`=<*path*>] [`-r`|`--run`=<*command*>]
              [`--pull`|`--no-pull`] [`-s`|`--ssh-key`=<*path*>]
 
 DESCRIPTION
@@ -28,20 +28,28 @@ CI run with isolated dependencies.
 OPTIONS
 -------
 
-`-n`, `--name`=<*name*>
+`-n`, `-t`, `--name`=<*name*>
   Name of the built image. This can be used to differentiate between branches
   or others in a CI environment. By default the name is the basename(1) of the
   current directory.
 
 `--export`, `--no-export`
-  Whenever to export artifacts. If `--export` is passed and the `export:`
-  directive is set in the `cide.yml` file, artifacts from that directory are
-  transfered back outside of the container and into the current directory.
+  Whether to export artifacts. If `--export` is passed and the directory to
+  be exported is set (either with `export_dir:` in the `cide.yml` file, or by
+  specifying `--guest-export-dir` on the command line) artifacts from that
+  directory are transfered back outside of the container (see `--export-dir`
+  and `--guest-export-dir`)
 
 `-o`, `--export-dir`=<*path*>
-  By default the export directory is the same as the one given in the
-  `export:` directive in the `cide.yml` file. It is possible to change that
+  Where the directory extracted from the container should be placed on the
+  host.  By default the export directory is the same as the one given in the
+  `export_dir:` directive in the `cide.yml` file. It is possible to change that
   target folder outside of the container.
+
+`--guest-export-dir`=<*path*>
+  Which directory from the container should be extracted.  By default the
+  export directory is the same as the one specified with `--export-dir` if any,
+  or in the `export_dir:` directive in the `cide.yml` file otherwise.
 
 `-r`, `--run`=<*command*>
   Override the script to run. Usually the `run:` directive in the `cide.yml`
