@@ -1,0 +1,29 @@
+#!/bin/bash -e
+
+if [[ -z $1 ]]; then
+  echo "Missing <TARGET>" >&2
+  exit 1
+fi
+
+packager_bin() {
+	local bin=$1
+	local name=$(basename "$1")
+	mkdir -p .packager/bin
+	cat <<BIN > ".packager/bin/${name}"
+#!/bin/sh -e
+here=\$(dirname "\$(readlink -f "\$0")")
+target=\$(readlink -f "\$here/../../${bin}")
+exec "\$target" "\$@"
+BIN
+	chmod +x ".packager/bin/${name}"
+}
+
+TARGET=$1
+
+cp -r "$PWD" "$TARGET"
+cd "$TARGET"
+bundle install --standalone --binstubs=binstubs --without=development test
+
+rm -rf vendor/bundle/ruby/*/{bin,build_info,cache,doc,extensions,specifications}
+
+packager_bin binstubs/cide

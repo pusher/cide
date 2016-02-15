@@ -1,4 +1,4 @@
-require 'shellwords'
+require 'thor'
 
 module CIDE
   # Simple docker client helper
@@ -19,32 +19,30 @@ module CIDE
 
     class VersionError < StandardError; end
 
-    def docker(*args, **opts)
-      setup_docker
+    def docker(*args, verbose: false, capture: false)
+      cmd = (['docker'] + args).map(&:to_s)
+      p cmd if verbose
 
-      ret = run Shellwords.join(['docker'] + args), opts
+      if capture
+        r, w = IO.pipe
+        pid = Process.spawn(*cmd, out: w)
+        w.close
+        return r.read
+      else
+        pid = Process.spawn(*cmd)
+
+        return 0
+      end
+    ensure
+      Process.wait(pid)
       exitstatus = $?.exitstatus
       fail Error, exitstatus if exitstatus > 0
-      ret
     end
 
     protected
 
     def setup_docker
       @setup_docker ||= (
-        if `uname`.strip == 'Darwin' && !ENV['DOCKER_HOST']
-          unless system('which boot2docker >/dev/null 2>&1')
-            puts 'make sure boot2docker is installed and running'
-            puts
-            puts '> brew install boot2docker'
-            exit 1
-          end
-
-          `boot2docker shellinit 2>/dev/null`
-            .lines
-            .grep(/export (\w+)=(.*)/) { ENV[$1] = $2.strip }
-        end
-
         # Check docker version
         docker_version = nil
         case `docker version 2>/dev/null`

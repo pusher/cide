@@ -1,11 +1,9 @@
 ---
-from: ruby:2.1
-as_root:
-  - chown -R cide:cide /usr/local/bundle
+from: ruby:2.0
 before:
   add:
     - Gemfile
     - Gemfile.lock
     - cide.gemspec
   run: bundle install --jobs=3 --retry=3 --deployment
-run: bundle exec rake
+run: script/ci
