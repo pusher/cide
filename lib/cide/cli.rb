@@ -123,7 +123,7 @@ module CIDE
       type: :boolean,
       default: true
 
-    method_option 'set_build_id',
+    method_option 'build_id',
       desc: 'Specifies the build id',
       default: nil
 
@@ -144,7 +144,7 @@ module CIDE
 
       FileUtils.rm_rf(build_root)
 
-      build_id = options.set_build_id || (
+      build_id = options.build_id || (
         timestamp = Time.now.strftime('%Y-%m-%d_%H%M%S')
         git_branch = `git symbolic-ref --short -q HEAD || echo unknown`.strip
         git_rev = `git rev-parse --short HEAD`.strip
