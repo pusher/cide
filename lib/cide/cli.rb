@@ -123,8 +123,8 @@ module CIDE
       type: :boolean,
       default: true
 
-    method_option 'set_version',
-      desc: 'Tells cide the package version, otherwise extracted from git',
+    method_option 'set_build_id',
+      desc: 'Specifies the build id',
       default: nil
 
     # AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_REGION need to be passed
@@ -144,14 +144,14 @@ module CIDE
 
       FileUtils.rm_rf(build_root)
 
-      version = options.set_version || (
+      build_id = options.set_build_id || (
+        timestamp = Time.now.strftime('%Y-%m-%d_%H%M%S')
         git_branch = `git symbolic-ref --short -q HEAD || echo unknown`.strip
         git_rev = `git rev-parse --short HEAD`.strip
-        "#{git_branch}-#{git_rev}"
+        "#{timestamp}.#{git_branch}-#{git_rev}"
       )
 
-      timestamp = Time.now.strftime('%Y-%m-%d_%H%M%S')
-      tar_name = "#{options.package}.#{timestamp}.#{version}.tar.gz"
+      tar_name = "#{options.package}.#{build_id}.tar.gz"
       tar_path = File.join(build_root, tar_name)
 
       banner 'Config'
