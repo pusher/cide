@@ -158,6 +158,16 @@ module CIDE
       config = ConfigFile.load(Dir.pwd)
       say_status :config, config.inspect
 
+      version_data =
+        case config.package && config.package.add_version
+        when 'sha'
+          `git rev-parse HEAD`.strip
+        when 'short_sha'
+          `git rev-parse --short HEAD`.strip
+        when 'auto'
+          build_id
+        end
+
       ## Build ##
       banner 'Build'
       builder = Builder.new(config)
@@ -184,6 +194,15 @@ module CIDE
         guest_dir: guest_export_dir,
         host_dir: host_export_dir,
       )
+
+      ## Set version ##
+      if version_data
+        version_file = File.join(host_export_dir, '.packager', 'version')
+        FileUtils.mkdir_p(File.dirname(version_file))
+        File.open(version_file, 'w') do |f|
+          f.puts version_data
+        end
+      end
 
       # Create archive
       puts "Package: #{tar_name}"

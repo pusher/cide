@@ -50,6 +50,10 @@ export_dir:
 # CI runtime. See the Link definition.
 links: []
 
+# Setups the behaviour of the `cide package` command. See the Package
+# definition.
+package: {}
+
 # Determines what script to run to execute the tests. This is the main command
 # that is used to run the CI.
 #
@@ -151,4 +155,23 @@ env: {}
 #
 # type: string
 run: 'redis-server'
+```
+
+Package definition
+------------------
+
+A hash that changes the behavious of the `cide package command.
+
+
+```yaml
+# When defined, will generate a .packager/version file before generating
+# the archive.
+#
+# If the value is "sha" it use git's HEAD sha for the value.
+#
+# If the value is "short_sha" it will be the first 6 characteds of the sha.
+#
+# If the value is "auto" it will either be the default build ID or the one
+# passed as a command-line argument.
+add_version: auto
 ```
