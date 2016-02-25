@@ -46,6 +46,12 @@ module CIDE
       attr_accessor :id
     end
 
+    class PackageConfig
+      include Virtus.model
+      include NiceInspect
+      attribute :add_version, String, required: false
+    end
+
     include Virtus.model(strict: true)
     include NiceInspect
     attribute :from, String, default: 'ubuntu'
@@ -56,6 +62,7 @@ module CIDE
     attribute :export_dir, String, required: false
     attribute :links, Array[Link], default: []
     attribute :run, Array[String], default: ['script/ci']
+    attribute :package, PackageConfig, required: false
 
     attr_reader :warnings, :errors
 

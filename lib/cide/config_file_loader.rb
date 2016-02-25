@@ -41,6 +41,8 @@ module CIDE
         when 'run', 'command' then
           wanted_key(path, 'run', key)
           @config.run = expect_run(path, value)
+        when 'package' then
+          @config.package = maybe_package(path, value)
         else
           unknown_key(path)
         end
@@ -125,6 +127,45 @@ module CIDE
         end
       end
       step
+    end
+
+    def maybe_package(path, value)
+      case value
+      when Hash then
+        load_package_config(path, value)
+      when nil then
+        nil
+      else
+        type_error(path, 'hash or nil', value)
+        nil
+      end
+    end
+
+    def load_package_config(path, data)
+      package = ConfigFile::PackageConfig.new
+      data.each_pair do |key, value|
+        key = key.to_s
+        path_ = path.append(key)
+        case key
+        when 'add_version' then
+          case value.to_s
+          when 'short_sha'
+            package.add_version = 'short_sha'
+          when 'sha'
+            package.add_version = 'sha'
+          when 'auto'
+            package.add_version = 'auto'
+          when nil, 'no', 'none'
+            # ignore
+          else
+            error('expected value to be one of ' \
+                  "\"short_sha\", \"sha\" or \"auto\" in #{_path}")
+          end
+        else
+          unknown_key(path_)
+        end
+      end
+      package
     end
 
     def expect_links(path, value)

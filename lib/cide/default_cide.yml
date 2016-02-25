@@ -29,5 +29,9 @@ links:
 # Sets additional environment variables
 env: {}
 
+# Packaging configuration
+package:
+#  add_version: short_sha # sha or auto
+
 # Main script to run
 run: script/ci

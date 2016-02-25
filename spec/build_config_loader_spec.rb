@@ -19,6 +19,7 @@ describe "CIDE::ConfigFile::Loader" do
     "env" => {},
     "export_dir" => nil,
     "links" => [],
+    "package" => nil,
     "run" => ["script/ci"],
   }
 
