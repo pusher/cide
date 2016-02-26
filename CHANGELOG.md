@@ -1,4 +1,16 @@
 
+0.9.0 / 2016-02-26
+==================
+
+  * NEW: setting to inject versions in your package
+  
+```yaml
+package:
+  add_version:auto
+```  
+
+  * NEW: add `cide package --build-id` to identify archives 
+
 0.8.1 / 2016-02-15
 ==================
 
