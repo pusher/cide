@@ -1,2 +1,0 @@
-#!/bin/sh
-direnv exec `dirname $0` cide "$@"
