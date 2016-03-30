@@ -90,8 +90,15 @@ module CIDE
       ## Export ##
       return unless options.export
       banner 'Export'
+
+      guest_dir = options.guest_export_dir || config.export_dir
+      if guest_dir.nil?
+        puts "Ignoring, missing export_dir"
+        return
+      end
+
       runner.export!(
-        guest_dir: options.guest_export_dir || config.export_dir,
+        guest_dir: guest_dir,
         host_dir: options.export_dir || config.export_dir,
       )
     rescue Docker::Error => ex
