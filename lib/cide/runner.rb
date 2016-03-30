@@ -13,7 +13,7 @@ module CIDE
       tag: nil,
       user: nil
     )
-      fail ArgumentError, 'tag missing' unless tag
+      raise ArgumentError, 'tag missing' unless tag
 
       @containers = []
       @id = SecureRandom.hex
@@ -54,8 +54,8 @@ module CIDE
     end
 
     def export!(guest_dir: nil, host_dir: nil)
-      fail ArgumentError, 'guest export_dir missing' unless guest_dir
-      fail ArgumentError, 'host export_dir missing' unless host_dir
+      raise ArgumentError, 'guest export_dir missing' unless guest_dir
+      raise ArgumentError, 'host export_dir missing' unless host_dir
 
       # FIXME: strip trailing slashes ?
       guest_dir = File.expand_path(guest_dir, CIDE_SRC_DIR)

@@ -5,7 +5,7 @@ module CIDE
   module Docker
     # Generates a valid id for docker from any string
     def self.id(str)
-      "#{str}".downcase.gsub(/[^a-z0-9\-_.]/, '_')
+      str.to_s.downcase.gsub(/[^a-z0-9\-_.]/, '_')
     end
 
     # Raised when a docker command exits with a status higher than zero
@@ -36,7 +36,7 @@ module CIDE
     ensure
       Process.wait(pid)
       exitstatus = $?.exitstatus
-      fail Error, exitstatus if exitstatus > 0
+      raise Error, exitstatus if exitstatus > 0
     end
 
     protected
@@ -44,18 +44,19 @@ module CIDE
     def setup_docker
       @setup_docker ||= (
         # Check docker version
-        docker_version = nil
-        case `docker version 2>/dev/null`
-        when /Client version: ([^\s]+)/
-          docker_version = $1
-        when /\s+Version:\s+([^\s]+)/
-          docker_version = $1
-        else
-          fail VersionError, 'Unknown docker version'
-        end
+        x = `docker version 2>/dev/null`
+        docker_version =
+          case x
+          when /Client version: ([^\s]+)/
+            $1
+          when /\s+Version:\s+([^\s]+)/
+            $1
+          else
+            raise VersionError, 'Unknown docker version'
+          end
 
         if Gem::Version.new(docker_version) < Gem::Version.new('1.5.0')
-          fail VersionError, "Docker version #{$1} too old"
+          raise VersionError, "Docker version #{$1} too old"
         end
 
         true

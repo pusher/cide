@@ -46,6 +46,8 @@ Style/SpecialGlobalVars:
 
 # Allows for easy diffing
 # Keep them sorted alphabetically unless a meaningful order exists
-Style/TrailingComma:
+Style/TrailingCommaInLiteral:
+  EnforcedStyleForMultiline: comma
+Style/TrailingCommaInArguments:
   EnforcedStyleForMultiline: comma
 

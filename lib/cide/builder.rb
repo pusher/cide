@@ -14,12 +14,12 @@ module CIDE
     end
 
     def build(tag: nil, pull: nil, ssh_key: nil)
-      fail ArgumentError, 'tag missing' unless tag
+      raise ArgumentError, 'tag missing' unless tag
 
       if config.use_ssh
-        fail ArgumentError, 'ssh_key missing' unless ssh_key
+        raise ArgumentError, 'ssh_key missing' unless ssh_key
         unless File.exist?(ssh_key)
-          fail ArgumentError, "ssh_key #{ssh_key} not found"
+          raise ArgumentError, "ssh_key #{ssh_key} not found"
         end
         create_tmp_file! TEMP_SSH_KEY, File.read(ssh_key)
       end

@@ -102,7 +102,7 @@ module CIDE
       paths = CONFIG_FILES.map { |name| File.expand_path(name, dir) }
       paths
         .find { |path| File.exist?(path) } ||
-        fail("Config not found among these paths: #{paths.inspect}")
+        raise("Config not found among these paths: #{paths.inspect}")
     end
   end
 end

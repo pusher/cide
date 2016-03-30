@@ -311,11 +311,12 @@ module CIDE
         value.each_pair do |key, value_|
           key = key.to_s
           path_ = path.append(key)
-          if value_.nil?
-            value_ = expect_env(path_, key)
-          else
-            value_ = expect_string(path_, value_)
-          end
+          value_ =
+            if value_.nil?
+              expect_env(path_, key)
+            else
+              expect_string(path_, value_)
+            end
           hash[key.to_s] = value_ if value_
         end
       else

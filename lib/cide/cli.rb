@@ -93,7 +93,7 @@ module CIDE
 
       guest_dir = options.guest_export_dir || config.export_dir
       if guest_dir.nil?
-        puts "Ignoring, missing export_dir"
+        puts 'Ignoring, missing export_dir'
         return
       end
 
@@ -141,7 +141,7 @@ module CIDE
       default: ENV['AWS_BUCKET']
 
     def package
-      fail 'missing AWS_BUCKET' if options.upload && !options.aws_bucket
+      raise 'missing AWS_BUCKET' if options.upload && !options.aws_bucket
 
       tag = name_to_tag options.name
 
@@ -295,7 +295,8 @@ module CIDE
       x = docker('images', '--no-trunc', capture: true)
       iter = x.lines.each
       iter.next
-      cide_image_ids = iter
+      cide_image_ids =
+        iter
         .map { |line| line.split(/\s+/) }
         .select { |line| line[0] =~ %r{^cide[/-]} || line[0] == '<none>' }
         .map { |line| line[2] }
@@ -306,16 +307,20 @@ module CIDE
       end
 
       x = docker('inspect', *cide_image_ids, capture: true)
-      cide_images = JSON.parse(x.strip)
+      cide_images =
+        JSON
+        .parse(x.strip)
         .each { |image| image['Created'] = Time.iso8601(image['Created']) }
         .sort { |a, b| a['Created'] <=> b['Created'] }
 
       if cide_images.size > max_images
-        old_cide_images = cide_images[0..-max_images]
+        old_cide_images =
+          cide_images[0..-max_images]
           .map { |image| image['Id'] }
       else
         old_times = Time.now - (days_to_keep * 24 * 60 * 60)
-        old_cide_images = cide_images
+        old_cide_images =
+          cide_images
           .select { |image| image['Created'] < old_times }
           .map { |image| image['Id'] }
       end
