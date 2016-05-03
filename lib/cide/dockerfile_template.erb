@@ -1,4 +1,7 @@
 FROM <%= from %>
+LABEL cide=""
+LABEL cide.build.complete="false"
+
 USER root
 RUN useradd -m -U -d <%= CIDE_DIR %> cide
 
@@ -55,3 +58,4 @@ USER root
 ADD . <%= CIDE_SRC_DIR %>
 RUN chown -R cide:cide <%= CIDE_DIR %>
 USER cide
+LABEL cide.build.complete="true"

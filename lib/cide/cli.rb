@@ -292,14 +292,15 @@ module CIDE
       days_to_keep = options[:days]
       max_images = options[:count]
 
-      x = docker('images', '--no-trunc', capture: true)
-      iter = x.lines.each
-      iter.next
-      cide_image_ids =
-        iter
-        .map { |line| line.split(/\s+/) }
-        .select { |line| line[0] =~ %r{^cide[/-]} || line[0] == '<none>' }
-        .map { |line| line[2] }
+      # Delete failed images
+      failed_filter = 'label=cide.build.complete=false'
+      cide_failed_image_ids = docker_image_ids(filter_by: failed_filter)
+      if cide_failed_image_ids.any?
+        docker('rmi', '--force', *cide_failed_image_ids)
+      end
+
+      # Retrieve all other cide images
+      cide_image_ids = docker_image_ids(filter_by: 'label=cide')
 
       if cide_image_ids.empty?
         puts 'No images found to be cleaned'
@@ -313,24 +314,21 @@ module CIDE
         .each { |image| image['Created'] = Time.iso8601(image['Created']) }
         .sort { |a, b| a['Created'] <=> b['Created'] }
 
-      if cide_images.size > max_images
-        old_cide_images =
-          cide_images[0..-max_images]
-          .map { |image| image['Id'] }
-      else
-        old_times = Time.now - (days_to_keep * 24 * 60 * 60)
-        old_cide_images =
-          cide_images
-          .select { |image| image['Created'] < old_times }
-          .map { |image| image['Id'] }
-      end
+      to_destroy = cide_images[max_images..-1]
+      leftover_images = cide_images[0..(max_images - 1)]
 
-      if old_cide_images.empty?
+      expire_from = Time.now - (days_to_keep * 24 * 60 * 60)
+      to_destroy <<
+        leftover_images.select { |image| image['Created'] < expire_from }
+
+      to_destroy_ids = to_destroy.map { |image| image['Id'] }
+
+      if to_destroy_ids.empty?
         puts 'No images found to be cleaned'
         return
       end
 
-      docker('rmi', '--force', *old_cide_images)
+      docker('rmi', '--force', *to_destroy_ids)
     end
 
     desc 'init', "Creates a blank #{CONFIG_FILES.first} in the project"
