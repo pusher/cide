@@ -19,6 +19,15 @@ module CIDE
 
     class VersionError < StandardError; end
 
+    def docker_image_ids(filter_by: false)
+      args = ['--no-trunc']
+      args << ['--filter', filter_by] if filter_by
+      lines = docker('images', *args, capture: true).lines[1..-1]
+      lines
+        .map { |line| line.split(/\s+/) }
+        .map { |line| line[2] }
+    end
+
     def docker(*args, verbose: false, capture: false)
       cmd = (['docker'] + args).map(&:to_s)
       p cmd if verbose
