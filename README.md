@@ -1,7 +1,6 @@
-*cide* - Isolated test runner with Docker
-=========================================
+# *cide* - Isolated build tool and test runner with Docker
 
-*cide* is a command-line tool that runs tests in an isolated (docker)
+*cide* is a command-line tool that builds packages and runs tests in an isolated (docker)
 environment. It solves a problem where Jenkins workers need all the project's
 dependencies (possibly conflicting) to be installed on the boxes. With *cide*
 each run gets its own set of temporary docker containers which are scratched
@@ -10,8 +9,7 @@ the developer machine and get the same build environment as on the CI. This
 makes configuration iterations much shorter and allows to converge on a
 working configuration faster.
 
-Usage
------
+## Usage
 
 Go to the target project's root and run `cide init` to populate a default
 `cide.yml`. This file contains all the instruction to build your project with
@@ -20,8 +18,7 @@ cide.
 Once the file is configured run `cide` to execute the build. All the output
 will appear in the console.
 
-Example
--------
+## Example
 
 `cide.yml`
 ```yaml
@@ -39,8 +36,7 @@ run: bundle exec rspec
 
 See [the cide.yml man page](man/cide.yml.1.md) for the full documentation.
 
-Features
---------
+## Features
 
 * straighforward to use, just run `cide` inside of your project
 * works on OSX with boot2docker
@@ -48,8 +44,7 @@ Features
 * can use linked containers for backend dependencies like MySQL or redis
 * artefact export
 
-Missing features
-----------------
+## Missing features
 
 * Linked container readiness detection. Some containers take a while to boot
   up. Currently the `script/ci` must implement some sort of detection loop.
@@ -61,8 +56,7 @@ Missing features
 
 PR welcome !
 
-Installation
-------------
+## Installation
 
 The current dependencies are [ruby
 2.0+](https://www.ruby-lang.org/en/documentation/installation/) and [docker
@@ -82,8 +76,7 @@ Then install the *cide* ruby gem:
 gem install cide
 ```
 
-Similar projects
-----------------
+## Similar projects
 
 * [Docker Compose](https://docs.docker.com/compose/) - Docker development environment
 * [Travis CI](https://travis-ci.org/) - Great CI for Open Source projects
