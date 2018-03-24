@@ -47,29 +47,5 @@ module CIDE
       exitstatus = $?.exitstatus
       raise Error, exitstatus if exitstatus > 0
     end
-
-    protected
-
-    def setup_docker
-      @setup_docker ||= (
-        # Check docker version
-        x = `docker version 2>/dev/null`
-        docker_version =
-          case x
-          when /Client version: ([^\s]+)/
-            $1
-          when /\s+Version:\s+([^\s]+)/
-            $1
-          else
-            raise VersionError, 'Unknown docker version'
-          end
-
-        if Gem::Version.new(docker_version) < Gem::Version.new('1.5.0')
-          raise VersionError, "Docker version #{$1} too old"
-        end
-
-        true
-      )
-    end
   end
 end
