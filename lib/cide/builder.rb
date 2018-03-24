@@ -24,7 +24,6 @@ module CIDE
         create_tmp_file! TEMP_SSH_KEY, File.read(ssh_key)
       end
       create_tmp_file! DOCKERFILE, config.to_dockerfile
-      File.write("Dockerfile", config.to_dockerfile)
 
       build_options = ['--force-rm']
       build_options << '--pull' if pull
