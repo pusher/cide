@@ -57,8 +57,6 @@ module CIDE
       default: '~/.ssh/id_rsa'
 
     def exec
-      setup_docker
-
       tag = name_to_tag options.name
 
       banner 'Config'
@@ -248,8 +246,6 @@ module CIDE
       desc: 'User to run under',
       default: 'cide'
     def debug
-      setup_docker
-
       tag = name_to_tag options.name
 
       ## Config ##
@@ -287,8 +283,6 @@ module CIDE
       default: 20,
       type: :numeric
     def clean
-      setup_docker
-
       days_to_keep = options[:days]
       max_images = options[:count]
 
