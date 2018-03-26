@@ -2,16 +2,16 @@
 
 Gem::Specification.new do |s|
   s.name          = 'cide'
-  s.version       = '0.9.1'
-  s.authors       = ['zimbatm']
-  s.email         = ['zimbatm@zimbatm.com']
+  s.version       = '0.9.2'
+  s.authors       = ['pusher']
+  s.email         = ['support@pusher.com']
   s.summary       = 'Isolated test runner with Docker'
   s.description   = <<DESC
 cide is a command-line tool that runs tests in an isolated (docker)
 environment. It allows to run the same command on the developer and CI
 machines.
 DESC
-  s.homepage      = 'https://zimbatm.github.io/cide'
+  s.homepage      = 'https://pusher.github.io/cide'
   s.license       = 'MIT'
 
   s.executables   = ['cide']
