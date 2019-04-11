@@ -138,6 +138,11 @@ module CIDE
       desc: 'AWS_BUCKET',
       default: ENV['AWS_BUCKET']
 
+    method_option 'build_script',
+      desc: 'Script to run to perform the build',
+      type: :string,
+      default: 'script/build'
+
     def package
       raise 'missing AWS_BUCKET' if options.upload && !options.aws_bucket
 
@@ -155,6 +160,8 @@ module CIDE
         git_rev = `git rev-parse --short HEAD`.strip
         "#{timestamp}.#{git_branch}-#{git_rev}"
       )
+
+      build_script = options.build_script
 
       tar_name = "#{options.package}.#{build_id}.tar.gz"
       tar_path = File.join(build_root, tar_name)
@@ -185,7 +192,7 @@ module CIDE
       ## Run ##
       banner 'Run'
       runner = Runner.new(
-        command: ['script/build', guest_export_dir],
+        command: [build_script, guest_export_dir],
         env: config.env,
         links: config.links,
         tag: tag,
