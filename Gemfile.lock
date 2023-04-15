@@ -49,7 +49,7 @@ GEM
     powerpack (0.1.1)
     rainbow (2.1.0)
     rake (11.1.2)
-    redcarpet (3.3.4)
+    redcarpet (3.6.0)
     rouge (1.10.1)
     rspec (3.4.0)
       rspec-core (~> 3.4.0)
